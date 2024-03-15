@@ -1,0 +1,13 @@
+{
+    "env": "prod",
+    "log": "verbose",
+    "port": "0000",
+    "tokenExpireInDays": 7,
+    "database": {
+        "retryInterval": 5,
+        "host": "",
+        "user": "",
+        "password": "",
+        "database": ""
+    }
+}
