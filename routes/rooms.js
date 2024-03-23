@@ -76,14 +76,14 @@ router.post('/', (req, res) => {
 
 // join room
 router.post('/join', (req, res) => {
-    const { serverId, userId, roomId } = req.body;
+    var { serverId, userId, roomId } = req.body;
+    if (!serverId || !roomId || !userId) return res.status(400).json({ message: "Provide a valid room id" });
 
     // check if user is not impersonating someone else
     const authUId = req.body.authenticatedUserId;
-    if(authUId !== userId) return res.status(401).json({ message: "You are not authorized to do this." });
+    if(String(authUId) !== String(userId)) return res.status(401).json({ message: "You are not authorized to do this." });
     userId = authUId;
 
-    if (!serverId || !roomId || !userId) return res.status(400).json({ message: "Provide a valid room id" });
 
     // if user is already in room, remove it
     req.database.query("DELETE FROM room_users WHERE userId = ?", [userId], (err, result, fields) => {
@@ -190,7 +190,7 @@ router.get('/:id/:serverId/messages', (req, res) => {
 });
 
 router.post('/messages', (req, res) => {
-    const { roomId, userId, serverId, message, } = req.body;
+    var { roomId, userId, serverId, message, } = req.body;
     if (!roomId) return res.status(400).json({ message: "Provide a valid room id" });
     if (!userId) return res.status(400).json({ message: "Provide a valid user id" });
     if (!serverId) return res.status(400).json({ message: "Provide a valid server id" });
@@ -198,7 +198,7 @@ router.post('/messages', (req, res) => {
 
     // check if user is not impersonating someone else
     const authUId = req.body.authenticatedUserId;
-    if(authUId !== userId) return res.status(401).json({ message: "You are not authorized to do this." });
+    if(String(authUId) !== String(userId)) return res.status(401).json({ message: "You are not authorized to do this." });
     userId = authUId;
     
     // transform js date to mysql date

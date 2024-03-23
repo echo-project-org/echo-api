@@ -60,12 +60,12 @@ router.get("/image/:id", (req, res) => {
 });
 
 router.post("/image", (req, res) => {
-    const { id, image } = req.body;
+    var { id, image } = req.body;
     if (!id || !image) return res.status(400).send({ message: "You messed up the request." });
 
     // check if user is not impersonating another user
     const authUId = req.body.authenticatedUserId;
-    if(authUId !== id) return res.status(401).json({ message: "You are not authorized to do this." });
+    if(String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
     id = authUId;
 
     // save image (base64 of file) to file system from jpeg
@@ -133,7 +133,7 @@ router.post("/customStatus", (req, res) => {
     
     // check if user is not impersonating another user
     const authUId = req.body.authenticatedUserId;
-    if(authUId !== id) return res.status(401).json({ message: "You are not authorized to do this." });
+    if(String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
     id = authUId;
 
     // update user status
@@ -285,7 +285,7 @@ router.get('/friends/:id', (req, res) => {
 // operation on friend request
 router.post('/friend/request', (req, res) => {
     const body = req.body;
-    const id = body.id;
+    var id = body.id;
     const friendId = body.friendId;
     const operation = body.operation;
     
@@ -293,7 +293,7 @@ router.post('/friend/request', (req, res) => {
     
     // check if user is not impersonating another user
     const authUId = body.authenticatedUserId;
-    if(authUId !== id) return res.status(401).json({ message: "You are not authorized to do this." });
+    if(String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
     id = authUId;
 
     switch (operation) {
