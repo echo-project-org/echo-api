@@ -25,6 +25,8 @@ router.post("/register", (req, res) => {
 
 router.post("/login", (req, res) => {
     const { email, password } = req.body;
+    //get ip address from request
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     
     if (!req.utils.checkEmail(email)) return res.status(406).send({ message: "Invalid email address. (Nice try...)" });
 
@@ -44,7 +46,7 @@ router.post("/login", (req, res) => {
             //generate a new token
             const token = req.authenticator.generateJWTToken(result[0].id);
             //update the user status to online
-            req.database.query("UPDATE users SET online = ? WHERE id = ?", ["1", result[0].id], (err, result, fields) => {
+            req.database.query("UPDATE users SET online = ?, ip = ? WHERE id = ?", ["1", ip, result[0].id], (err, result, fields) => {
                 if (err) console.error(err);
             });
             //send the token to user
