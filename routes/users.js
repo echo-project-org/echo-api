@@ -10,6 +10,11 @@ router.use((req, res, next) => {
     if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
     if (body.scope !== "self") return res.status(401).send({ message: "You are not authorized to do this." });
 
+    // get user id from token
+    const uId = req.authenticator.getUserId(req.headers.authorization);
+    //add user id to request
+    req.body.authenticatedUserId = uId;
+
     next();
 });
 
@@ -58,6 +63,11 @@ router.post("/image", (req, res) => {
     const { id, image } = req.body;
     if (!id || !image) return res.status(400).send({ message: "You messed up the request." });
 
+    // check if user is not impersonating another user
+    const authUId = req.body.authenticatedUserId;
+    if(authUId !== id) return res.status(401).json({ message: "You are not authorized to do this." });
+    id = authUId;
+
     // save image (base64 of file) to file system from jpeg
     // const base64Data = image.replace(/^data:image\/jpeg;base64,/, "");
     const base64Data = image.replace(/^data:image\/png;base64,/, "");
@@ -101,7 +111,6 @@ router.get("/status/:id", (req, res) => {
 
 // update user status
 router.post('/status', (req, res) => {
-    // const ip = req.header('x-forwarded-for') || req.socket.remoteAddress;
     const { id, status } = req.body;
     if (!id || !status) return res.status(400).send({ message: "You messed up the request." });
 
@@ -121,6 +130,11 @@ router.post('/status', (req, res) => {
 router.post("/customStatus", (req, res) => {
     const { id, status } = req.body;
     if (!id || !status) return res.status(400).send({ message: "You messed up the request." });
+    
+    // check if user is not impersonating another user
+    const authUId = req.body.authenticatedUserId;
+    if(authUId !== id) return res.status(401).json({ message: "You are not authorized to do this." });
+    id = authUId;
 
     // update user status
     req.database.query("UPDATE user_status SET status = ? WHERE userId = ?", [status, id], (err, result, fields) => {
@@ -240,26 +254,26 @@ router.get('/friends/:id', (req, res) => {
                         status: friends.otherUserStatus,
                     })
                 } else
-                // check if user sent friend request
-                if (friends.relationship === "sent") {
-                    friendMap.sent.push({
-                        id: friends.otherUserId,
-                        img: friends.otherUserImage,
-                        name: friends.otherUsername,
-                        // status: friends.otherUserStatus,
-                        status: "-1",
-                    })
-                } else
-                // check if user has incoming friend request
-                if (friends.relationship === "incoming") {
-                    friendMap.incoming.push({
-                        id: friends.otherUserId,
-                        img: friends.otherUserImage,
-                        name: friends.otherUsername,
-                        // status: friends.otherUserStatus,
-                        status: "-1",
-                    })
-                }
+                    // check if user sent friend request
+                    if (friends.relationship === "sent") {
+                        friendMap.sent.push({
+                            id: friends.otherUserId,
+                            img: friends.otherUserImage,
+                            name: friends.otherUsername,
+                            // status: friends.otherUserStatus,
+                            status: "-1",
+                        })
+                    } else
+                        // check if user has incoming friend request
+                        if (friends.relationship === "incoming") {
+                            friendMap.incoming.push({
+                                id: friends.otherUserId,
+                                img: friends.otherUserImage,
+                                name: friends.otherUsername,
+                                // status: friends.otherUserStatus,
+                                status: "-1",
+                            })
+                        }
             });
             res.status(200).send(friendMap);
         } else {
@@ -274,8 +288,13 @@ router.post('/friend/request', (req, res) => {
     const id = body.id;
     const friendId = body.friendId;
     const operation = body.operation;
-
+    
     if (!id || !friendId || !operation) return res.status(400).send({ message: "You messed up the request." });
+    
+    // check if user is not impersonating another user
+    const authUId = body.authenticatedUserId;
+    if(authUId !== id) return res.status(401).json({ message: "You are not authorized to do this." });
+    id = authUId;
 
     switch (operation) {
         case "add":

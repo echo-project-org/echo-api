@@ -5,7 +5,12 @@ router.use((req, res, next) => {
     const body = req.authenticator.checkToken(req, res);
     if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
     if (body.scope !== "self") return res.status(401).send({ message: "You are not authorized to do this." });
-
+    
+    // get user id from token
+    const uId = req.authenticator.getUserId(req.headers.authorization);
+    //add user id to request
+    req.body.authenticatedUserId = uId;
+    
     next();
 });
 
@@ -72,6 +77,12 @@ router.post('/', (req, res) => {
 // join room
 router.post('/join', (req, res) => {
     const { serverId, userId, roomId } = req.body;
+
+    // check if user is not impersonating someone else
+    const authUId = req.body.authenticatedUserId;
+    if(authUId !== userId) return res.status(401).json({ message: "You are not authorized to do this." });
+    userId = authUId;
+
     if (!serverId || !roomId || !userId) return res.status(400).json({ message: "Provide a valid room id" });
 
     // if user is already in room, remove it
@@ -184,6 +195,11 @@ router.post('/messages', (req, res) => {
     if (!userId) return res.status(400).json({ message: "Provide a valid user id" });
     if (!serverId) return res.status(400).json({ message: "Provide a valid server id" });
     if (!message) return res.status(400).json({ message: "Provide a valid message" });
+
+    // check if user is not impersonating someone else
+    const authUId = req.body.authenticatedUserId;
+    if(authUId !== userId) return res.status(401).json({ message: "You are not authorized to do this." });
+    userId = authUId;
     
     // transform js date to mysql date
     // const jsDate = new Date(date);
