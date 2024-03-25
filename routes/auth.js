@@ -7,7 +7,7 @@ router.post("/register", (req, res) => {
     if (!req.utils.checkEmail(email)) return res.status(406).send({ message: "Invalid email address. (Nice try...)" });
 
     // this is bad, prepare statements are better
-    req.database.query("INSERT INTO users (name, email, password) VALUES ('" + name + "', '" + email + "', '" + password + "')", (err, result, fields) => {
+    req.database.query("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", [name, email, password], (err, result, fields) => {
         if (err) console.error(err);
         if (err) return res.status(406).send({ message: "Username or email already exists." });
         
