@@ -51,6 +51,8 @@ router.get("/image/:id", (req, res) => {
             console.log(err);
             res.status(400).send({ message: "Error reading image" });
         } else {
+            //allow client to cache image for 15 minutes
+            res.set("Cache-Control", "public, max-age=900");
             res.writeHead(200, { "Content-Type": "image/*,image/png" });
             res.end(data);
         }
