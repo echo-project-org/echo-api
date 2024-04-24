@@ -27,6 +27,20 @@ const codecs = [{
     }
 }];
 
+const workerParams = {
+    logLevel: 'debug',
+    logTags: [
+        'info',
+        'ice',
+        'dtls',
+        'rtp',
+        'srtp',
+        'rtcp'
+    ],
+    rtcMinPort: 40000,
+    rtcMaxPort: 49999
+}
+
 class MediasoupHandler {
     constructor() {
         this.workers = [];
@@ -36,19 +50,7 @@ class MediasoupHandler {
         console.log("Creating", numberOfWorkers, "workers");
 
         for (let i = 0; i < numberOfWorkers; i++) {
-            mediasoup.createWorker({
-                logLevel: 'debug',
-                logTags: [
-                    'info',
-                    'ice',
-                    'dtls',
-                    'rtp',
-                    'srtp',
-                    'rtcp'
-                ],
-                rtcMinPort: 40000,
-                rtcMaxPort: 49999
-            }).then((worker) => {
+            mediasoup.createWorker(workerParams).then((worker) => {
                 this.workers.push(worker);
                 console.log(colors.changeColor("cyan", "[W-" + worker.pid + "] Worker created"));
 
@@ -76,17 +78,41 @@ class MediasoupHandler {
     }
 
     /**
-     * 
+     * Get the worker with the minimum usage
+     * @returns Promise
+     */
+    _getMinUsageWorker() {
+        return new Promise(async (resolve, reject) => {
+            let minUsage = Infinity;
+            let minWorker = null;
+
+            for (const worker of this.workers) {
+                let usage = await worker.getResourceUsage();
+                console.log(colors.changeColor("cyan", "[W-" + worker.pid + "] Worker usage: " + usage.ru_utime));
+                if (usage.ru_utime < minUsage) {
+                    minUsage = usage.ru_utime;
+                    minWorker = worker;
+                } else if (minWorker === null) {
+                    minWorker = worker;
+                }
+            }
+
+            resolve(minWorker);
+        });
+    }
+
+    /**
+     * Create a mediasoup router (room)
      * @param {*} rId Room id
      * @returns Promise
      */
-    async createRoom(rId) {
+    async createRouter(rId) {
         return new Promise(async (resolve, reject) => {
             //check if room already exists
             if (this.routers.get(rId)) {
                 resolve(true);
             } else {
-                let worker = this.workers[0];
+                let worker = await this._getMinUsageWorker();
                 let router = await worker.createRouter({ mediaCodecs: codecs });
                 this.routers.set(rId, {
                     router: router,
@@ -97,7 +123,12 @@ class MediasoupHandler {
         });
     }
 
-    async deleteRoom(rId) {
+    /**
+     * Delete a mediasoup router (room)
+     * @param {*} rId Room id
+     * @returns Promise
+     */
+    async deleteRouter(rId) {
         return new Promise(async (resolve, reject) => {
             let router = this.routers.get(rId);
             if (!router) {
@@ -119,7 +150,7 @@ class MediasoupHandler {
     }
 
     /**
-     * 
+     * Create transports for a user in a room
      * @param {*} uId User id
      * @param {*} rId Room id
      * @returns Promise
@@ -167,6 +198,12 @@ class MediasoupHandler {
         });
     }
 
+    /**
+     * Delete transports for a user in a room
+     * @param {*} uId User id
+     * @param {*} rId Room id
+     * @returns Promise  
+     */
     async deleteTransports(uId, rId) {
         return new Promise(async (resolve, reject) => {
             let router = this.routers.get(rId);
