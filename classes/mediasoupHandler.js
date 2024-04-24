@@ -370,6 +370,40 @@ class MediasoupHandler {
             }
         });
     }
+
+    /**
+     * Used to consume audio
+     * @param {*} uId  User id
+     * @param {*} rId  Room id
+     * @param {*} data Data given by mediasoup client
+     * @returns Promise
+     */
+    async consumeAudio(uId, rId, data) {
+        return new Promise(async (resolve, reject) => {
+            let router = this.routers.get(rId);
+            if (!router) {
+                reject("Router not found!");
+            } else {
+                let transports = router.transports.get(uId);
+                if (!transports) {
+                    reject("Transports not found!");
+                } else {
+                    let consumer = await transports.audioOutTransport.consume({
+                        producerId: data.producerId,
+                        rtpCapabilities: data.rtpCapabilities,
+                        paused: true
+                    });
+
+                    resolve({
+                        id: consumer.id,
+                        producerId: data.producerId,
+                        kind: consumer.kind,
+                        rtpParameters: consumer.rtpParameters
+                    });
+                }
+            }
+        });
+    }
 }
 
 module.exports = MediasoupHandler;
