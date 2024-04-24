@@ -187,7 +187,11 @@ class MediasoupHandler {
                     "audioInTransport": audioInTransport,
                     "audioOutTransport": audioOutTransport,
                     "videoInTransport": videoInTransport,
-                    "videoOutTransport": videoOutTransport
+                    "videoOutTransport": videoOutTransport,
+                    "audioInProducer": null,
+                    "audioOutProducer": null,
+                    "videoInProducer": null,
+                    "videoOutProducer": null
                 });
 
                 resolve({
@@ -334,6 +338,38 @@ class MediasoupHandler {
                 }
             }
         });
+    }
+
+    /**
+     * Used to produce audio
+     * @param {*} uId  User id
+     * @param {*} rId  Room id
+     * @param {*} data Data given by mediasoup client
+     * @returns Promise with producer id (send to mediasoup client)
+     */
+    async produceAudio(uId, rId, data) {
+        return new Promise(async (resolve, reject) => {
+            let router = this.routers.get(rId);
+            if (!router) {
+                reject("Router not found!");
+            } else {
+                let transports = router.transports.get(uId);
+                if (!transports) {
+                    reject("Transports not found!");
+                } else {
+                    let producer = await transports.audioInTransport.produce({
+                        id: data.id,
+                        kind: data.kind,
+                        rtpParameters: data.rtpParameters,
+                        appData: data.appData
+                    });
+
+                    transports.audioInProducer = producer;
+                    resolve(producer.id);
+                }
+            }
+        });
+    }
 }
 
 module.exports = MediasoupHandler;
