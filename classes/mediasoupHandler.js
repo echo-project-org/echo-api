@@ -11,6 +11,7 @@ const codecs = [{
     parameters: {
         useinbandfec: 1,
         minptipe: 10,
+        //TODO allow bitrate to be set programmatically
         maxaveragebitrate: 510000,
         stereo: 1,
         maxplaybackrate: 48000
@@ -18,6 +19,7 @@ const codecs = [{
 },
 {
     kind: "video",
+    //TODO allow codec to be set programmatically
     mimeType: "video/H264",
     clockRate: 90000,
     parameters: {
@@ -37,6 +39,7 @@ const workerParams = {
         'srtp',
         'rtcp'
     ],
+    //TODO get ports from config
     rtcMinPort: 40000,
     rtcMaxPort: 49999
 }
@@ -224,6 +227,113 @@ class MediasoupHandler {
             }
         });
     }
+
+    /**
+     * Used to connect the transport
+     * @param {*} uId  User id
+     * @param {*} rId  Room id
+     * @param {*} data Data given by mediasoup client
+     * @returns Promise
+     */
+    async audioInTransportConnect(uId, rId, data) {
+        return new Promise(async (resolve, reject) => {
+            let router = this.routers.get(rId);
+            if (!router) {
+                reject("Router not found!");
+            } else {
+                let transports = router.transports.get(uId);
+                if (!transports) {
+                    reject("Transports not found!");
+                } else {
+                    await transports.audioInTransport.connect({
+                        dtlsParameters: data.dtlsParameters,
+                    });
+
+                    resolve(true);
+                }
+            }
+        });
+    }
+
+    /**
+     * Used to connect the transport
+     * @param {*} uId  User id
+     * @param {*} rId  Room id
+     * @param {*} data Data given by mediasoup client
+     * @returns Promise
+     */
+    async audioOutTransportConnect(uId, rId, data) {
+        return new Promise(async (resolve, reject) => {
+            let router = this.routers.get(rId);
+            if (!router) {
+                reject("Router not found!");
+            } else {
+                let transports = router.transports.get(uId);
+                if (!transports) {
+                    reject("Transports not found!");
+                } else {
+                    await transports.audioOutTransport.connect({
+                        dtlsParameters: data.dtlsParameters,
+                    });
+
+                    resolve(true);
+                }
+            }
+        });
+    }
+
+    /**
+     * Used to connect the transport
+     * @param {*} uId  User id
+     * @param {*} rId  Room id
+     * @param {*} data Data given by mediasoup client
+     * @returns Promise
+     */
+    async videoInTransportConnect(uId, rId, data) {
+        return new Promise(async (resolve, reject) => {
+            let router = this.routers.get(rId);
+            if (!router) {
+                reject("Router not found!");
+            } else {
+                let transports = router.transports.get(uId);
+                if (!transports) {
+                    reject("Transports not found!");
+                } else {
+                    await transports.videoInTransport.connect({
+                        dtlsParameters: data.dtlsParameters,
+                    });
+
+                    resolve(true);
+                }
+            }
+        });
+    }
+
+    /**
+     * Used to connect the transport
+     * @param {*} uId  User id
+     * @param {*} rId  Room id
+     * @param {*} data Data given by mediasoup client
+     * @returns Promise
+     */
+    async videoOutTransportConnect(uId, rId, data) {
+        return new Promise(async (resolve, reject) => {
+            let router = this.routers.get(rId);
+            if (!router) {
+                reject("Router not found!");
+            } else {
+                let transports = router.transports.get(uId);
+                if (!transports) {
+                    reject("Transports not found!");
+                } else {
+                    await transports.videoOutTransport.connect({
+                        dtlsParameters: data.dtlsParameters,
+                    });
+
+                    resolve(true);
+                }
+            }
+        });
 }
 
 module.exports = MediasoupHandler;
