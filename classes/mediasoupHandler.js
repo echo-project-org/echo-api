@@ -234,40 +234,19 @@ class MediasoupHandler {
 
     /**
      * Used to connect the transport
+     * @param {*} type Type of transport [audioInTransport, audioOutTransport, videoInTransport, videoOutTransport]
      * @param {*} uId  User id
      * @param {*} rId  Room id
      * @param {*} data Data given by mediasoup client
      * @returns Promise
-     */
-    async audioInTransportConnect(uId, rId, data) {
+    */
+    async transportConnect(type, uId, rId, data) {
         return new Promise(async (resolve, reject) => {
-            let router = this.routers.get(rId);
-            if (!router) {
-                reject("Router not found!");
-            } else {
-                let transports = router.transports.get(uId);
-                if (!transports) {
-                    reject("Transports not found!");
-                } else {
-                    await transports.audioInTransport.connect({
-                        dtlsParameters: data.dtlsParameters,
-                    });
-
-                    resolve(true);
-                }
+            //check type
+            if (type !== "audioInTransport" && type !== "audioOutTransport" && type !== "videoInTransport" && type !== "videoOutTransport") {
+                reject("Invalid transport type!");
             }
-        });
-    }
 
-    /**
-     * Used to connect the transport
-     * @param {*} uId  User id
-     * @param {*} rId  Room id
-     * @param {*} data Data given by mediasoup client
-     * @returns Promise
-     */
-    async audioOutTransportConnect(uId, rId, data) {
-        return new Promise(async (resolve, reject) => {
             let router = this.routers.get(rId);
             if (!router) {
                 reject("Router not found!");
@@ -276,61 +255,7 @@ class MediasoupHandler {
                 if (!transports) {
                     reject("Transports not found!");
                 } else {
-                    await transports.audioOutTransport.connect({
-                        dtlsParameters: data.dtlsParameters,
-                    });
-
-                    resolve(true);
-                }
-            }
-        });
-    }
-
-    /**
-     * Used to connect the transport
-     * @param {*} uId  User id
-     * @param {*} rId  Room id
-     * @param {*} data Data given by mediasoup client
-     * @returns Promise
-     */
-    async videoInTransportConnect(uId, rId, data) {
-        return new Promise(async (resolve, reject) => {
-            let router = this.routers.get(rId);
-            if (!router) {
-                reject("Router not found!");
-            } else {
-                let transports = router.transports.get(uId);
-                if (!transports) {
-                    reject("Transports not found!");
-                } else {
-                    await transports.videoInTransport.connect({
-                        dtlsParameters: data.dtlsParameters,
-                    });
-
-                    resolve(true);
-                }
-            }
-        });
-    }
-
-    /**
-     * Used to connect the transport
-     * @param {*} uId  User id
-     * @param {*} rId  Room id
-     * @param {*} data Data given by mediasoup client
-     * @returns Promise
-     */
-    async videoOutTransportConnect(uId, rId, data) {
-        return new Promise(async (resolve, reject) => {
-            let router = this.routers.get(rId);
-            if (!router) {
-                reject("Router not found!");
-            } else {
-                let transports = router.transports.get(uId);
-                if (!transports) {
-                    reject("Transports not found!");
-                } else {
-                    await transports.videoOutTransport.connect({
+                    await transports[type].connect({
                         dtlsParameters: data.dtlsParameters,
                     });
 
