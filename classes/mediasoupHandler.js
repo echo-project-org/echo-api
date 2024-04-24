@@ -404,6 +404,33 @@ class MediasoupHandler {
             }
         });
     }
+
+    /**
+     * Resume audio stream once client is ready to receive
+     * @param {*} uId  User id
+     * @param {*} rId  Room id
+     * @returns Promise
+     */
+    async resumeAudio(uId, rId) {
+        return new Promise(async (resolve, reject) => {
+            let router = this.routers.get(rId);
+            if (!router) {
+                reject("Router not found!");
+            } else {
+                let transports = router.transports.get(uId);
+                if (!transports) {
+                    reject("Transports not found!");
+                } else {
+                    if (transports.audioOutProducer) {
+                        await transports.audioOutProducer.resume();
+                        resolve(true);
+                    } else {
+                        reject("Producer not found!");
+                    }
+                }
+            }
+        });
+    }
 }
 
 module.exports = MediasoupHandler;
