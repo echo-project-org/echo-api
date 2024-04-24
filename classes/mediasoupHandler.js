@@ -77,6 +77,49 @@ class MediasoupHandler {
 
     /**
      * 
+     * @param {*} rId Room id
+     * @returns Promise
+     */
+    async createRoom(rId) {
+        return new Promise(async (resolve, reject) => {
+            //check if room already exists
+            if (this.routers.get(rId)) {
+                resolve(true);
+            } else {
+                let worker = this.workers[0];
+                let router = await worker.createRouter({ mediaCodecs: codecs });
+                this.routers.set(rId, {
+                    router: router,
+                    transports: new Map()
+                });
+                resolve(true);
+            }
+        });
+    }
+
+    async deleteRoom(rId) {
+        return new Promise(async (resolve, reject) => {
+            let router = this.routers.get(rId);
+            if (!router) {
+                reject("Router not found!");
+            } else {
+                //close all transports
+                router.transports.forEach((value, key) => {
+                    value.audioInTransport.close();
+                    value.audioOutTransport.close();
+                    value.videoInTransport.close();
+                    value.videoOutTransport.close();
+                });
+
+                router.close();
+                this.routers.delete(rId);
+                resolve(true);
+            }
+        });
+    }
+
+    /**
+     * 
      * @param {*} uId User id
      * @param {*} rId Room id
      * @returns Promise
@@ -106,13 +149,41 @@ class MediasoupHandler {
                 const videoInTransport = await router.createWebRtcTransport(transportParams);
                 const videoOutTransport = await router.createWebRtcTransport(transportParams);
 
-                return resolve({
+                router.transports.set(uId, {
+                    "audioInTransport": audioInTransport,
+                    "audioOutTransport": audioOutTransport,
+                    "videoInTransport": videoInTransport,
+                    "videoOutTransport": videoOutTransport
+                });
+
+                resolve({
                     "routerCapabilities": router.rtpCapabilities,
                     audioInTransport,
                     audioOutTransport,
                     videoInTransport,
                     videoOutTransport
                 })
+            }
+        });
+    }
+
+    async deleteTransports(uId, rId) {
+        return new Promise(async (resolve, reject) => {
+            let router = this.routers.get(rId);
+            if (!router) {
+                reject("Router not found!");
+            } else {
+                let transports = router.transports.get(uId);
+                if (!transports) {
+                    reject("Transports not found!");
+                } else {
+                    transports.audioInTransport.close();
+                    transports.audioOutTransport.close();
+                    transports.videoInTransport.close();
+                    transports.videoOutTransport.close();
+                    router.transports.delete(uId);
+                    resolve(true);
+                }
             }
         });
     }
