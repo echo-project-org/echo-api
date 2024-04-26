@@ -29,6 +29,21 @@ router.get('/events', (req, res) => {
         console.log(`${clientId} Connection closed`);
         clients = clients.filter(client => client.id !== clientId);
     });
+
+    setInterval(() => {
+        const message = `data: ${JSON.stringify(facts)}\n\n`;
+        console.log(`Sending: facts`);
+        clients.forEach(client => client.res.write(message));
+    }, 10000);
+});
+
+router.post('/events', (req, res) => {
+    const { fact } = req.body;
+    facts.push(fact);
+
+    clients.forEach(client => client.res.write(`data: ${fact}\n\n`));
+
+    res.json({ status: 'success' });
 });
 
 module.exports = router;
