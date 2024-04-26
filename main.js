@@ -40,5 +40,6 @@ server.use("/api/rooms", require("./routes/rooms"));
 server.use("/api/auth", require("./routes/auth"));
 server.use("/api/servers", require("./routes/servers"));
 server.use("/api/media", require("./routes/media"));
+server.use("/api/events", require("./routes/events"));
 
 server.listen(config.port, () => console.log("API online and listening on port", config.port));

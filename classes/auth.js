@@ -51,14 +51,15 @@ class Auth {
     // Sign the token with the key
     var jwtData = jwt.create(claims, key);
     // expiration if needed
-    jwtData.setExpiration(new Date().getTime() + (30*24*60*60*1000));
+    const tokenExpire = new Date().getTime() + (30*24*60*60*1000);
+    jwtData.setExpiration(tokenExpire);
     // nbf if needed
     // jwtData.setNotBefore(new Date().getTime() + (60*60*1000));
     // compact the token
     var token = jwtData.compact();
     console.log("JWT token for user", user, "generated");
     this.tokens[token] = { user, key };
-    return token;
+    return [token, tokenExpire];
   }
 
   revokeToken(token) {

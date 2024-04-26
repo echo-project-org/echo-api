@@ -15,3 +15,4 @@ router.use((req, res, next) => {
     next();
 });
 
+module.exports = router;

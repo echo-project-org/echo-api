@@ -43,7 +43,7 @@ router.post("/login", (req, res) => {
             //remove any old tokens
             req.authenticator.revokeTokenFromUser(result[0].id);
             //generate a new token
-            const token = req.authenticator.generateJWTToken(result[0].id);
+            const [token, tokenExpire] = req.authenticator.generateJWTToken(result[0].id);
             //update the user status to online
             req.database.query("UPDATE users SET online = ?, ip = ? WHERE id = ?", ["1", ip, result[0].id], (err, result, fields) => {
                 if (err) console.error(err);
@@ -56,7 +56,8 @@ router.post("/login", (req, res) => {
                 img: result[0].img,
                 online: "1",
                 status: result[0].status,
-                token
+                token,
+                tokenExpire
             });
         }
 
@@ -79,7 +80,7 @@ router.get("/verify", (req, res) => {
     const result = req.authenticator.getUserId(token);
     if (result) {
         //generate a new token
-        const newToken = req.authenticator.generateJWTToken(result);
+        const [newToken, tokenExpire] = req.authenticator.generateJWTToken(result);
         //revoke the old token
         req.authenticator.revokeToken(token);
         //send the new token to user
@@ -98,7 +99,8 @@ router.get("/verify", (req, res) => {
                     img: result[0].img,
                     online: "1",
                     status: result[0].status,
-                    token: newToken
+                    token: newToken,
+                    tokenExpire
                 });
             }
 
