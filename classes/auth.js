@@ -10,8 +10,7 @@ class Auth {
   }
 
   rand(count, options) {
-    var crypto = require('crypto');
-    var buf = crypto.randomBytes(count);
+    let buf = crypto.randomBytes(count);
 
     switch (options.type) {
       case 'Array':
