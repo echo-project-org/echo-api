@@ -3,48 +3,48 @@ const os = require("os");
 const Colors = require("./colors");
 const colors = new Colors();
 
-const codecs = [{
-    kind: "audio",
-    mimeType: "audio/opus",
-    clockRate: 48000,
-    channels: 2,
-    parameters: {
-        useinbandfec: 1,
-        minptipe: 10,
-        //TODO allow bitrate to be set programmatically
-        maxaveragebitrate: 510000,
-        stereo: 1,
-        maxplaybackrate: 48000
-    }
-},
-{
-    kind: "video",
-    //TODO allow codec to be set programmatically
-    mimeType: "video/H264",
-    clockRate: 90000,
-    parameters: {
-        "packetization-mode": 1,
-        "profile-level-id": "42001f",
-        "level-asymmetry-allowed": 1
-    }
-}];
-
-const workerParams = {
-    logLevel: 'debug',
-    logTags: [
-        'info',
-        'ice',
-        'dtls',
-        'rtp',
-        'srtp',
-        'rtcp'
-    ],
-    //TODO get ports from config
-    rtcMinPort: 40000,
-    rtcMaxPort: 49999
-}
-
 class MediasoupHandler {
+    workerParams = {
+        logLevel: 'debug',
+        logTags: [
+            'info',
+            'ice',
+            'dtls',
+            'rtp',
+            'srtp',
+            'rtcp'
+        ],
+        //TODO get ports from config
+        rtcMinPort: 40000,
+        rtcMaxPort: 49999
+    }
+
+    codecs = [{
+        kind: "audio",
+        mimeType: "audio/opus",
+        clockRate: 48000,
+        channels: 2,
+        parameters: {
+            useinbandfec: 1,
+            minptipe: 10,
+            //TODO allow bitrate to be set programmatically
+            maxaveragebitrate: 510000,
+            stereo: 1,
+            maxplaybackrate: 48000
+        }
+    },
+    {
+        kind: "video",
+        //TODO allow codec to be set programmatically
+        mimeType: "video/H264",
+        clockRate: 90000,
+        parameters: {
+            "packetization-mode": 1,
+            "profile-level-id": "42001f",
+            "level-asymmetry-allowed": 1
+        }
+    }]
+
     constructor() {
         this.workers = [];
         this.routers = new Map();
@@ -53,7 +53,7 @@ class MediasoupHandler {
         console.log("Creating", numberOfWorkers, "workers");
 
         for (let i = 0; i < numberOfWorkers; i++) {
-            mediasoup.createWorker(workerParams).then((worker) => {
+            mediasoup.createWorker(this.workerParams).then((worker) => {
                 this.workers.push(worker);
                 console.log(colors.changeColor("cyan", "[W-" + worker.pid + "] Worker created"));
 
@@ -116,7 +116,7 @@ class MediasoupHandler {
                 resolve(true);
             } else {
                 let worker = await this._getMinUsageWorker();
-                let router = await worker.createRouter({ mediaCodecs: codecs });
+                let router = await worker.createRouter({ mediaCodecs: this.codecs });
                 this.routers.set(rId, {
                     router: router,
                     transports: new Map()
