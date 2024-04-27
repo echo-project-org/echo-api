@@ -4,6 +4,11 @@
     "port": "0000",
     "tokenExpireInDays": 7,
     "database": {
+        "enableSqliteCaching": true,
+        "sqliteCachingConfig": {
+            "name": "template.db",
+            "location": "cache"
+        },
         "retryInterval": 5,
         "host": "",
         "user": "",

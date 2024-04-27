@@ -15,6 +15,9 @@ const authenticator = new OAuth();
 const SQL = require("./classes/mysql");
 const database = new SQL(config);
 
+const CacheHandler = require("./classes/eventsHandler.js");
+const cache = new CacheHandler(config);
+
 // add body parser middleware for api requests
 server.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 server.use(bodyParser.json({ limit: '5mb' }));
@@ -30,6 +33,7 @@ server.use((req, res, next) => {
     if (!req.authenticator) req.authenticator = authenticator;
     if (!req.utils) req.utils = require("./classes/utils");
     if (!req.database) req.database = database.getConnection();
+    if (!req.cache) req.cache = cache;
     
     next();
 });
