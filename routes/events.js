@@ -26,6 +26,10 @@ router.get("/users", (req, res) => {
     req.eventsHandler.addEvent('users', req, res);
 });
 
+router.get("/servers", (req, res) => {
+    req.eventsHandler.addEvent('servers', req, res);
+});
+
 router.get("/", (req, res) => {
     // get list of events
     const events = req.eventsHandler.getEvents();

@@ -62,6 +62,7 @@ router.post("/", (req, res) => {
             return console.error(err);
         }
         res.json({ message: "Server created!" });
+        req.eventsHandler.sendEvent("servers", { action: "newServer", data: { serverId: result.insertId, name, description, owner, inviteCode, img, psw } });
     });
 });
 
