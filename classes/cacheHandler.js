@@ -1,20 +1,30 @@
 const sqlite = require('sqlite3');
 const path = require('path');
+const fs = require('fs');
 
 class CacheHandler {
   constructor(config) {
     this.config = config.database;
-    if (this.config.enableSqliteCaching) {
-      const location = path.join(__dirname, config.sqliteCachingConfig.location, config.sqliteCachingConfig.name); 
-      // check if directory exists
-      if (!fs.existsSync(path.join(__dirname, config.sqliteCachingConfig.location))) {
-        fs.mkdirSync(path.join(__dirname, config.sqliteCachingConfig.location));
-      }
+    this.path = this.config.sqliteCachingConfig.location;
 
-      this.db = new sqlite.Database(location);
+    if (this.config.enableSqliteCaching) {
+      this.checkCacheFolder();
+      this.dbPath = path.resolve("./", this.path, this.config.sqliteCachingConfig.fileName);
+      console.log(this.dbPath);
+      this.db = new sqlite.Database(this.dbPath);
     }
   }
-  
+
+  checkCacheFolder() {
+    if (this.path.includes("/")) {
+      const folders = this.path.split("/");
+      let folderPath = "./";
+      folders.forEach(folder => {
+        folderPath = path.join(folderPath, folder);
+        if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath);
+      });
+    }
+  }
 
 }
 

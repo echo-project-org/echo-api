@@ -15,7 +15,7 @@ const authenticator = new OAuth();
 const SQL = require("./classes/mysql");
 const database = new SQL(config);
 
-const CacheHandler = require("./classes/eventsHandler.js");
+const CacheHandler = require("./classes/cacheHandler.js");
 const cache = new CacheHandler(config);
 
 const EventsHandler = require("./classes/eventsHandler.js");
