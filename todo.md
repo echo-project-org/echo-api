@@ -15,3 +15,4 @@
 - [ ] Implement sqlite caching (or any other type for that matter :P)
 - [ ] Create centralize database to store the data of all the CDN API nodes
 - [ ] Build database restructure logic for the central API node
+- [ ] Remove client-sent IDs from all endpoints that execute self action (eg. /users/images) since we can use the JWT to get the user
