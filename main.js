@@ -38,6 +38,7 @@ server.use((req, res, next) => {
     if (!req.database) req.database = database.getConnection();
     if (!req.cache) req.cache = cache;
     if (!req.eventsHandler) req.eventsHandler = eventsHandler;
+    if (!req.config) req.config = config;
 
     if (!req.deployMode) req.deployMode = config.env;
 

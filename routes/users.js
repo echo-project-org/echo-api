@@ -1,10 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const fs = require("fs");
+const path = require("path");
 
 router.use((req, res, next) => {
-    // check if endpoint starts with /image
-    if (req.path.startsWith("/image")) return next();
+    // check if the type of the request is a GET
+    if (req.method === "GET") {
+        // check if the endpoint contains /image
+        if (req.url.includes("/image")) {
+            return next();
+        }
+    }
 
     const body = req.authenticator.checkToken(req, res);
     if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
@@ -37,12 +43,16 @@ router.get("/:id", (req, res) => {
     });
 });
 
+// THIS HAS NO AUTHENTICATION
 router.get("/image/:id", (req, res) => {
     var { id } = req.params;
     // maybe good? IDK
     if (id.includes(".")) id = id.split(".")[0];
+    const filePath = path.resolve("./", req.config.uploader.uploadDirectory, id + ".png");
+    // check if the folder and the subfolder exists
+    if (!fs.existsSync(filePath)) return res.status(404).send({ message: "File not found" });
     // get image from file system
-    fs.readFile("./images/" + id + ".png", function (err, data) {
+    fs.readFile(filePath, function (err, data) {
         if (err) {
             console.log(err);
             res.status(400).send({ message: "Error reading image" });
@@ -66,10 +76,22 @@ router.post("/image", (req, res) => {
     if (String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
     id = authUId;
 
+    let filePath = req.config.uploader.uploadDirectory
+    // check if the folder and the subfolder exists, if not create them
+    if (filePath.includes("/")) {
+        const folders = filePath.split("/");
+        let folderPath = "./";
+        folders.forEach(folder => {
+            folderPath = path.join(folderPath, folder);
+            if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath);
+        });
+    }
+
+    filePath = path.join(filePath, id + ".png");
     // save image (base64 of file) to file system from jpeg
     // const base64Data = image.replace(/^data:image\/jpeg;base64,/, "");
     const base64Data = image.replace(/^data:image\/png;base64,/, "");
-    fs.writeFile("./images/" + id + ".png", base64Data, "base64", function (err) {
+    fs.writeFile(filePath, base64Data, "base64", function (err) {
         if (err) {
             console.log(err);
             res.status(400).send({ message: "Error saving image" });

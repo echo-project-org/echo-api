@@ -9,3 +9,9 @@
 - [ ] Add updater logic to the API, for example changelogs, in the /app route
 - [ ] Implement paging on API responses, like server list and room list
 - [ ] Implement timeout logic in case of connection lost for events subscribing (should be already in place, but needs to be checked)
+- [x] Differentiate the POST /users/image to the GET for authentication
+- [x] Move the upload folder to the /data folder
+- [x] Move the logging folder to /data
+- [ ] Implement sqlite caching (or any other type for that matter :P)
+- [ ] Create centralize database to store the data of all the CDN API nodes
+- [ ] Build database restructure logic for the central API node
