@@ -7,12 +7,21 @@
         "enableSqliteCaching": true,
         "sqliteCachingConfig": {
             "name": "template.db",
-            "location": "cache"
+            "location": "data/cache"
         },
         "retryInterval": 5,
         "host": "",
         "user": "",
         "password": "",
         "database": ""
+    },
+    "logger": {
+        "maxFileSize": 5242880,
+        "maxFiles": 5,
+        "logDirectory": "data/logs",
+        "fileName": "echo.log"
+    },
+    "uploader": {
+        "uploadDirectory": "data/uploads"
     }
 }

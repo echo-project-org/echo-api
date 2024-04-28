@@ -3,11 +3,11 @@ const server = express();
 const bodyParser = require('body-parser');
 const cors = require("cors");
 
-const { Logger } = require("./classes/logger.js");
-new Logger();
-
 const cLoader = require("./classes/configLoader");
 const config = new cLoader().getCfg();
+
+const { Logger } = require("./classes/logger.js");
+new Logger(config);
 
 const OAuth = require("./classes/auth");
 const authenticator = new OAuth();

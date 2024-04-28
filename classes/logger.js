@@ -2,11 +2,14 @@ const path = require("path");
 const fs = require("fs");
 
 class Logger {
-    constructor() {
-        this.path = "./logs"
+    constructor(config) {
+        this.config = config.logger;
+        this.path = this.config.logDirectory;
         this.fileStream = null;
         this.logStream = null;
-        this.logFile = path.join(this.path, "log.txt");
+
+        this.logFilePath = path.resolve("./", this.path);
+        this.logFile = path.resolve("./", this.path, this.config.fileName);
 
         this.log = this.log.bind(this);
         this.checkFolder();
@@ -38,12 +41,12 @@ class Logger {
     createStream() {
         // create write stream
         this.logStream = fs.createWriteStream(this.logFile, { flags: "a" });
-        // get size of logs.txt file
+        // get size of logs.txt file (USED ONLY IN STARTUP, OTHERWISE WILL ERROR OUT ALWAYS)
         fs.stat(this.logFile, (err, stats) => {
-            if (err) console.error(err);
+            if (err) return console.error(err);
             console.error("size of file is", stats.size, "bytes");
             // check if file is bigger than 50MB
-            if (stats.size > 50000000) {
+            if (stats.size > this.config.maxFileSize) {
                 // rotate log file
                 this.rotate();
             }
@@ -51,10 +54,15 @@ class Logger {
     }
 
     checkFolder() {
-        // create main data folder (here since this module gets required first)
-        if (!fs.existsSync(this.path)) fs.mkdirSync(this.path);
-        // check if folder exists
-        if (!fs.existsSync(path.join(this.path))) fs.mkdirSync(path.join(this.path));
+        // check if this.path contains a subdirectory and check if folders exist, 
+        if (this.path.includes("/")) {
+            const folders = this.path.split("/");
+            let folderPath = "./";
+            folders.forEach(folder => {
+                folderPath = path.join(folderPath, folder);
+                if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath);
+            });
+        }
     }
 
     checkFile() {
@@ -62,26 +70,36 @@ class Logger {
         if (!fs.existsSync(this.logFile)) {
             // create file
             fs.writeFileSync(this.logFile, "");
+
+            // create new stream after create
+            if (this.logStream) {
+                this.logStream.end();
+                this.logStream = null;
+                this.createStream();
+            }
         }
     }
 
     rotate() {
-        this.checkFile();
-        // rename file
-        const date = new Date();
-        // create new log file and rename adding date as DD/MM/YYYY HH:MM:SS
-        const newFile = path.join(this.path, `log_${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.txt`);
-        // print file rotation
-        console.log(`Renaming log file to ${newFile}`);
-        // end the stream of the current log file
-        this.logStream.end();
-        // rename the current log file to the new path
-        fs.renameSync(this.logFile, newFile);
-        // create new stream after rename
-        this.createStream();
+        return new Promise((resolve, reject) => {
+            this.checkFile();
+            // rename file
+            const date = new Date();
+            // create new log file and rename adding date as DD/MM/YYYY HH.MM.SS
+            const newFile = path.resolve(this.path, `echo_${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.log`);
+            // rename the current log file to the new path
+            fs.rename(this.logFile, newFile, () => {
+                this.logStream.end();
+                this.logStream = null;
+                // create new stream after rename
+                this.createStream();
+                resolve();
+            });
+        });
     }
     
     async log(...args) {
+        this.checkFile();
         // check if args have array or object, if so, stringify it
         args = args.map(arg => {
             if (typeof arg === "object") {
@@ -100,11 +118,12 @@ class Logger {
         // write to stdout
         process.stdout.write(message);
         // write to log file
+        if (!this.logStream) return;
         this.logStream.write(message);
         // check if file size is bigger than 50MB
-        if (this.logStream.bytesWritten > 50000000) {
+        if (this.logStream.bytesWritten > this.config.maxFileSize) {
             // rotate log file
-            this.rotate();
+            await this.rotate();
         }
     }
 }
