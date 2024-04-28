@@ -5,12 +5,12 @@ router.use((req, res, next) => {
     const body = req.authenticator.checkToken(req, res);
     if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
     if (body.scope !== "self") return res.status(401).send({ message: "You are not authorized to do this." });
-    
+
     // get user id from token
     const uId = req.authenticator.getUserId(req.headers.authorization);
     //add user id to request
     req.body.authenticatedUserId = uId;
-    
+
     next();
 });
 
@@ -81,7 +81,7 @@ router.post('/join', (req, res) => {
 
     // check if user is not impersonating someone else
     const authUId = req.body.authenticatedUserId;
-    if(String(authUId) !== String(userId)) return res.status(401).json({ message: "You are not authorized to do this." });
+    if (String(authUId) !== String(userId)) return res.status(401).json({ message: "You are not authorized to do this." });
     userId = authUId;
 
 
@@ -198,9 +198,9 @@ router.post('/messages', (req, res) => {
 
     // check if user is not impersonating someone else
     const authUId = req.body.authenticatedUserId;
-    if(String(authUId) !== String(userId)) return res.status(401).json({ message: "You are not authorized to do this." });
-    userId = authUId;
-    
+    if (req.deployMode !== "dev" && String(authUId) !== String(userId)) return res.status(401).json({ message: "You are not authorized to do this." });
+    if (req.deployMode !== "dev") userId = authUId;
+
     // transform js date to mysql date
     // const jsDate = new Date(date);
     // const mysqlDate = jsDate.toISOString().slice(0, 19).replace('T', ' ');
@@ -210,6 +210,7 @@ router.post('/messages', (req, res) => {
             res.status(400).json({ message: "Error sending the message!" });
             return console.error(err);
         }
+        req.eventsHandler.sendEvent("messages", { roomId, userId, message, serverId });
         res.json({ message: "Message sent!" });
     });
 });

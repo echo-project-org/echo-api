@@ -1,24 +1,54 @@
 class EventsHandler {
   constructor() {
     this.events = {};
-    this.clients = [];
   }
 
-  addEvent(event) {
+  addEvent(event, req, res) {
+    const userId = req.body.authenticatedUserId;
     if (!this.events[event]) {
       this.events[event] = [];
+    } else {
+      // check if user is already in the event
+      const user = this.events[event].find(client => client.id === userId);
+      if (user) {
+        console.log(`${userId} is already in the event`);
+        res.status(400).json({ message: "You are already in the event" });
+        return;
+      }
     }
+
+    const headers = {
+        'Content-Type': 'text/event-stream',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache'
+    };
+    res.writeHead(200, headers);
+    const data = JSON.stringify({ status: "success", userId });
+    res.write(`data: ${data}\n\n`);
+
+    this.events[event].push({ id: userId, res });
+
+    req.on('close', () => {
+        console.log(`${userId} Connection closed`);
+        this.events[event] = this.events[event].filter(client => client.id !== userId);
+    });
+
+    req.on('error', () => {
+        console.log(`${userId} Connection error`);
+        this.events[event] = this.events[event].filter(client => client.id !== userId);
+    });
   }
 
-  register(req, res) {
-    const body = req.authenticator.checkToken(req, res);
-    if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
-    if (body.scope !== "self") return res.status(401).send({ message: "You are not authorized to do this." });
+  sendEvent(event, data) {
+    if (!this.events[event]) {
+      console.log(`No clients connected to ${event} or event does not exist`);
+      return;
+    }
 
-    const uId = req.authenticator.getUserId(req.headers.authorization);
-    req.body.authenticatedUserId = uId;
-
-    this.clients.push({ id: uId, res });
+    const jsonData = JSON.stringify(data);
+    const message = `data: ${jsonData}\n\n`;
+    console.log(`Sending: ${jsonData} to ${event} event clients`);
+    this.events[event].forEach(client => client.res.write(message));
   }
 }
 

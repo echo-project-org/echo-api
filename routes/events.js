@@ -17,37 +17,8 @@ router.use((req, res, next) => {
     next();
 });
 
-router.get('/events', (req, res) => {
-    const userId = req.body.authenticatedUserId;
-
-    const headers = {
-        'Content-Type': 'text/event-stream',
-        'Connection': 'keep-alive',
-        'Cache-Control': 'no-cache'
-    };
-    res.writeHead(200, headers);
-    res.write("data: {\"status\": \"success\"}\n\n");
-
-    clients.push({ id: userId, res });
-
-    req.on('close', () => {
-        console.log(`${userId} Connection closed`);
-        clients = clients.filter(client => client.id !== userId);
-    });
-
-    // setInterval(() => {
-    //     const message = `data: ${JSON.stringify(facts)}\n\n`;
-    //     console.log(`Sending: facts`);
-    //     clients.forEach(client => client.res.write(message));
-    // }, 10000);
-});
-
-router.post('/events', (req, res) => {
-    const { fact } = req.body;
-    facts.push(fact);
-
-    clients.forEach(client => client.res.write(`data: ${fact}\n\n`));
-    res.json({ status: 'success' });
+router.get('/messages', (req, res) => {
+    req.eventsHandler.addEvent('messages', req, res);
 });
 
 module.exports = router;

@@ -18,6 +18,9 @@ const database = new SQL(config);
 const CacheHandler = require("./classes/eventsHandler.js");
 const cache = new CacheHandler(config);
 
+const EventsHandler = require("./classes/eventsHandler.js");
+const eventsHandler = new EventsHandler();
+
 // add body parser middleware for api requests
 server.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 server.use(bodyParser.json({ limit: '5mb' }));
@@ -34,6 +37,16 @@ server.use((req, res, next) => {
     if (!req.utils) req.utils = require("./classes/utils");
     if (!req.database) req.database = database.getConnection();
     if (!req.cache) req.cache = cache;
+    if (!req.eventsHandler) req.eventsHandler = eventsHandler;
+
+    if (!req.deployMode) req.deployMode = config.env;
+
+    // check if database is connected
+    if (!req.database) {
+        console.error("Database not connected. Exiting...");
+        res.status(500).send({ message: "Database not connected. Exiting..." });
+        return;
+    }
     
     next();
 });

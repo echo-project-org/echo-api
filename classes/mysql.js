@@ -1,4 +1,4 @@
-const mysql = require('mysql'); 
+const mysql = require('mysql');
 
 class SQL {
     constructor(config) {
@@ -17,7 +17,7 @@ class SQL {
                 console.error(err);
                 if (this.con) this.con.release();
                 this.connected = false;
-                console.error("Retrying connection to database. Maybe offline?");
+                console.error(`Retrying connection to database. Maybe offline? Retrying in ${this.config.database.retryInterval} minutes.`);
                 setTimeout(() => { this.enstablishConnection() }, this.config.database.retryInterval * 1000 * 60 || 20000);
             });
     }
@@ -26,30 +26,32 @@ class SQL {
         return new Promise((resolve, reject) => {
             this.pool = mysql.createPool(this.config.database);
             this.con = this.pool.getConnection((err, connection) => {
-                if(err){
-                    connection.release();
-                    reject(err);
+                if (err) {
+                    // connection.release();
+                    reject(err.message);
+                } else {
+                    // connection.release();
+                    resolve();
                 }
             })
-            resolve();
         });
     }
-    
+
     getConnection() {
         if (!this.connected) return false;
         return this.pool;
     }
 
-    query(query, callback){
+    query(query, callback) {
         this.pool.getConnection((err, connection) => {
-            if(err){
+            if (err) {
                 console.error(err);
                 connection.release();
                 return false;
             }
             connection.query(query, (err, result) => {
                 connection.release();
-                if(err){
+                if (err) {
                     console.error(err);
                     return false;
                 }
