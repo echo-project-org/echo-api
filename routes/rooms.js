@@ -210,7 +210,7 @@ router.post('/messages', (req, res) => {
             res.status(400).json({ message: "Error sending the message!" });
             return console.error(err);
         }
-        req.eventsHandler.sendEvent("messages", { roomId, userId, message, serverId });
+        req.eventsHandler.sendEvent("messages", { roomId, userId, message, serverId, messageId: result.insertId, affectedRows: result.affectedRows});
         res.json({ message: "Message sent!" });
     });
 });
