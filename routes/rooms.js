@@ -71,6 +71,7 @@ router.post('/', (req, res) => {
             return console.error(err);
         }
         res.json({ message: "Room created!" });
+        req.eventsHandler.sendEvent("rooms", { action: "newRoom", data: { serverId, name, description, maxUsers, roomId: result.insertId } });
     });
 });
 
@@ -83,7 +84,6 @@ router.post('/join', (req, res) => {
     const authUId = req.body.authenticatedUserId;
     if (String(authUId) !== String(userId)) return res.status(401).json({ message: "You are not authorized to do this." });
     userId = authUId;
-
 
     // if user is already in room, remove it
     req.database.query("DELETE FROM room_users WHERE userId = ?", [userId], (err, result, fields) => {
@@ -110,7 +110,8 @@ router.post('/join', (req, res) => {
                         });
                     });
                 }
-                return res.json(jsonOut);
+                res.json(jsonOut);
+                req.eventsHandler.sendEvent("rooms", { action: "userJoin", data: { roomId, userId, serverId, connectedUsers: jsonOut } });
             });
         });
     }
@@ -210,7 +211,7 @@ router.post('/messages', (req, res) => {
             res.status(400).json({ message: "Error sending the message!" });
             return console.error(err);
         }
-        req.eventsHandler.sendEvent("messages", { roomId, userId, message, serverId, messageId: result.insertId, affectedRows: result.affectedRows});
+        req.eventsHandler.sendEvent("messages", { action: "newMessage", data: { roomId, userId, message, serverId, messageId: result.insertId, affectedRows: result.affectedRows } });
         res.json({ message: "Message sent!" });
     });
 });

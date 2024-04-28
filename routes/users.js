@@ -18,10 +18,6 @@ router.use((req, res, next) => {
     next();
 });
 
-router.get('/', (req, res) => {
-    res.status(200).send({ message: "pong" });
-});
-
 router.get("/:id", (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).send({ message: "You messed up the request." });
@@ -67,7 +63,7 @@ router.post("/image", (req, res) => {
 
     // check if user is not impersonating another user
     const authUId = req.body.authenticatedUserId;
-    if(String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
+    if (String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
     id = authUId;
 
     // save image (base64 of file) to file system from jpeg
@@ -83,6 +79,7 @@ router.post("/image", (req, res) => {
                 // console.log(err);
                 if (err) return res.status(400).send({ error: "You messed up the request." });
                 res.status(200).send({ message: "Image updated!", url: imgUrl });
+                req.eventsHandler.sendEvent("users", { action: "imageUpdate", data: { userId: authUId, url: imgUrl } });
             });
         }
     });
@@ -113,8 +110,13 @@ router.get("/status/:id", (req, res) => {
 
 // update user status
 router.post('/status', (req, res) => {
-    const { id, status } = req.body;
+    let { id, status } = req.body;
     if (!id || !status) return res.status(400).send({ message: "You messed up the request." });
+
+    // check if user is not impersonating another user
+    const authUId = req.body.authenticatedUserId;
+    if (String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
+    id = authUId;
 
     // set online status of user to offline
     req.database.query("UPDATE users SET online = ? WHERE id = ?", [status, id], function (err, result, fields) {
@@ -124,18 +126,20 @@ router.post('/status', (req, res) => {
         if (status === "0")
             req.database.query("DELETE FROM room_users WHERE userId = ?", [id], function (err, result, fields) {
                 if (err) console.log(err);
+                res.status(200).send({ message: "You are now offline!" });
             });
-        res.status(200).send({ message: "You are now offline!" });
+        res.status(200).send({ message: "Status updated!" });
+        req.eventsHandler.sendEvent("users", { action: "statusUpdate", data: { userId: id, status } });
     });
 });
 
 router.post("/customStatus", (req, res) => {
-    const { id, status } = req.body;
+    let { id, status } = req.body;
     if (!id || !status) return res.status(400).send({ message: "You messed up the request." });
-    
+
     // check if user is not impersonating another user
     const authUId = req.body.authenticatedUserId;
-    if(String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
+    if (String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
     id = authUId;
 
     // update user status
@@ -143,6 +147,7 @@ router.post("/customStatus", (req, res) => {
         if (err) console.log(err);
         if (err) return res.status(500).send({ error: "You messed up the request." });
         res.status(200).send({ message: "Status updated!" });
+        req.eventsHandler.sendEvent("users", { action: "customStatusUpdate", data: { userId: id, status } });
     });
 });
 
@@ -290,12 +295,12 @@ router.post('/friend/request', (req, res) => {
     var id = body.id;
     const friendId = body.friendId;
     const operation = body.operation;
-    
+
     if (!id || !friendId || !operation) return res.status(400).send({ message: "You messed up the request." });
-    
+
     // check if user is not impersonating another user
     const authUId = body.authenticatedUserId;
-    if(String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
+    if (String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
     id = authUId;
 
     switch (operation) {
