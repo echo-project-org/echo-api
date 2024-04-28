@@ -53,7 +53,7 @@ server.use((req, res, next) => {
 
 server.use("/api/users", require("./routes/users"));
 server.use("/api/rooms", require("./routes/rooms"));
-// server.use("/api/app", require("./routes/app"));
+server.use("/api/app", require("./routes/app"));
 server.use("/api/auth", require("./routes/auth"));
 server.use("/api/servers", require("./routes/servers"));
 server.use("/api/media", require("./routes/media"));
