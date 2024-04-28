@@ -10,7 +10,6 @@ class CacheHandler {
     if (this.config.enableSqliteCaching) {
       this.checkCacheFolder();
       this.dbPath = path.resolve("./", this.path, this.config.sqliteCachingConfig.fileName);
-      console.log(this.dbPath);
       this.db = new sqlite.Database(this.dbPath);
     }
   }

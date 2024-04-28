@@ -44,7 +44,7 @@ class Logger {
         // get size of logs.txt file (USED ONLY IN STARTUP, OTHERWISE WILL ERROR OUT ALWAYS)
         fs.stat(this.logFile, (err, stats) => {
             if (err) return console.error(err);
-            console.error("size of file is", stats.size, "bytes");
+            console.log("Size of file is", stats.size, "bytes");
             // check if file is bigger than 50MB
             if (stats.size > this.config.maxFileSize) {
                 // rotate log file
