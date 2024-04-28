@@ -14,11 +14,11 @@ class Logger {
         this.log = this.log.bind(this);
         this.checkFolder();
         this.checkFile();
+        this.checkOldFiles();
         this.createStream();
 
         this.internalId = this.id();
         console.log = this.log;
-
         console.log("------------------------- LOG STARTED -------------------------");
     }
 
@@ -53,6 +53,31 @@ class Logger {
         });
     }
 
+    checkOldFiles() {
+        // check if there are old files in the directory by checking the date on the file name
+        fs.readdir(this.logFilePath, (err, files) => {
+            if (err) return console.error(err);
+            files.forEach(file => {
+                // check if file is a log file
+                if (file.includes("echo_")) {
+                    // check if file is older than 30 days
+                    const date = new Date();
+                    const fileNameToDate = file.split("echo_")[1].split(".log")[0].replace(/-/g, "-").replaceAll(".", ":").split(" ").join("T").toString().concat(".000Z");
+                    const fileDate = new Date(fileNameToDate);
+                    const diffTime = Math.abs(date - fileDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    // if file is older than 30 days, delete it
+                    if (diffDays > this.config.maxFilesDateDays) {
+                        fs.unlink(path.resolve(this.logFilePath, file), (err) => {
+                            if (err) return console.error(err);
+                            console.log(`Deleted old log file ${file}`);
+                        });
+                    }
+                }
+            });
+        });
+    }
+
     checkFolder() {
         // check if this.path contains a subdirectory and check if folders exist, 
         if (this.path.includes("/")) {
@@ -82,11 +107,13 @@ class Logger {
 
     rotate() {
         return new Promise((resolve, reject) => {
+            this.checkFolder();
             this.checkFile();
+            this.checkOldFiles();
             // rename file
             const date = new Date();
             // create new log file and rename adding date as DD/MM/YYYY HH.MM.SS
-            const newFile = path.resolve(this.path, `echo_${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.log`);
+            const newFile = path.resolve(this.path, `echo_${date.getFullYear()}-${('0' + (date.getMonth() + 1)).slice(-2)}-${('0' + date.getDate()).slice(-2)} ${('0' + date.getHours()).slice(-2)}.${('0' + date.getMinutes()).slice(-2)}.${('0' + date.getSeconds()).slice(-2)}.log`);
             // rename the current log file to the new path
             fs.rename(this.logFile, newFile, () => {
                 this.logStream.end();
@@ -97,7 +124,7 @@ class Logger {
             });
         });
     }
-    
+
     async log(...args) {
         this.checkFile();
         // check if args have array or object, if so, stringify it
