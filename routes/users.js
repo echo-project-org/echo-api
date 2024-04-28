@@ -46,6 +46,7 @@ router.get("/:id", (req, res) => {
 // THIS HAS NO AUTHENTICATION
 router.get("/image/:id", (req, res) => {
     var { id } = req.params;
+    res.setHeader("Content-Type", "image/*,image/png");
     // maybe good? IDK
     if (id.includes(".")) id = id.split(".")[0];
     const filePath = path.resolve("./", req.config.uploader.uploadDirectory, id + ".png");
