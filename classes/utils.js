@@ -12,7 +12,7 @@ function fullAuthenticationMiddleware(req, res, next) {
   // check if the token has a valid userId
   if (tokenUid) {
     // check if the body of the request has a valid id
-    const id = String(req.body?.id || req.params?.id);
+    const id = req.body?.id || req.params?.id;
     if (!id) {
       // if not then use the id from the token
       console.warn(`User ${tokenUid} is making a request without an id.`);
@@ -24,7 +24,7 @@ function fullAuthenticationMiddleware(req, res, next) {
     switch (tokenBody.scope) {
       // if the user is executing an action on their own behalf
       case "self":
-        if (tokenUid === id) {
+        if (tokenUid === id.toString()) {
           next();
         } else {
           res.status(401).send({ message: "You are not authorized to do this." });
