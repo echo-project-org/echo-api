@@ -3,7 +3,6 @@ const router = express.Router();
 
 router.post("/register", (req, res) => {
     const { name, password, email } = req.body;
-
     if (!req.utils.checkEmail(email)) return res.status(406).send({ message: "Invalid email address. (Nice try...)" });
 
     req.database.query("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", [name, email, password], (err, result, fields) => {

@@ -15,6 +15,7 @@ function fullAuthenticationMiddleware(req, res, next) {
     const id = req.body?.id || req.params?.id;
     if (!id) {
       // if not then use the id from the token
+      console.warn(`User ${tokenUid} is making a request without an id.`);
       req.body.id = tokenUid;
       req.params.id = tokenUid;
       return next();
@@ -31,6 +32,7 @@ function fullAuthenticationMiddleware(req, res, next) {
         break;
       // if the user is executing an action on behalf of someone else
       case "admin":
+        console.warn(`User ${tokenUid} is impersonating user ${id} using the admin scope.`)
         next();
         break;
       // default action is to deny the request
@@ -61,6 +63,7 @@ function partialAuthenticationMiddleware(req, res, next) {
         break;
       // if the user is executing an action on behalf of someone else
       case "admin":
+        console.warn(`User ${tokenUid} is impersonating user ${id} using the admin scope.`)
         next();
         break;
       // default action is to deny the request
