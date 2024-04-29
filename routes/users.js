@@ -133,7 +133,11 @@ router.post("/customStatus", fullAuthenticationMiddleware, (req, res) => {
 
     // update user status
     req.database.query("UPDATE user_status SET status = ? WHERE userId = ?", [status, id], (err, result, fields) => {
-        if (err) console.log(err);
+        if (result.warningCount === 1) {
+            console.error("Query gave an error: " + result.message);
+            return res.status(400).send({ error: "You can't use this value." });
+        }
+        if (err) console.error(err);
         if (err) return res.status(500).send({ error: "You messed up the request." });
         res.status(200).send({ message: "Status updated!" });
         req.eventsHandler.sendEvent("users", { action: "customStatusUpdate", data: { userId: id, status } });
