@@ -1,16 +1,12 @@
 const express = require("express");
 const router = express.Router();
-
-router.use((req, res, next) => {
-    const body = req.authenticator.checkToken(req, res);
-    if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
-    if (body.scope !== "self") return res.status(401).send({ message: "You are not authorized to do this." });
-
-    next();
-});
+const {
+    fullAuthenticationMiddleware,
+    partialAuthenticationMiddleware
+} = require("../classes/utils");
 
 // get all servers
-router.get("/", (req, res) => {
+router.get("/", partialAuthenticationMiddleware, (req, res) => {
     req.database.query("SELECT id, name, description, img FROM servers ORDER BY name", [], (err, result, fields) => {
         if (err) return console.error(err);
 
@@ -30,7 +26,7 @@ router.get("/", (req, res) => {
 });
 
 //get server by id
-router.get("/:id", (req, res) => {
+router.get("/:id", partialAuthenticationMiddleware, (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).json({ message: "Provide a valid server id" });
 
@@ -52,7 +48,7 @@ router.get("/:id", (req, res) => {
 });
 
 // create new server
-router.post("/", (req, res) => {
+router.post("/", partialAuthenticationMiddleware, (req, res) => {
     const { name, description, owner, inviteCode, img, psw } = req.body;
     if (!name || !description || !owner || !inviteCode || !img || !psw) return res.status(400).json({ message: "Provide a valid server id" });
 

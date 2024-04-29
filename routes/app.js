@@ -1,20 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const {
+    fullAuthenticationMiddleware,
+    partialAuthenticationMiddleware
+} = require("../classes/utils");
 
-router.use((req, res, next) => {
-    const body = req.authenticator.checkToken(req, res);
-    if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
-    if (body.scope !== "self") return res.status(401).send({ message: "You are not authorized to do this." });
-
-    // get user id from token
-    const uId = req.authenticator.getUserId(req.headers.authorization);
-    //add user id to request
-    req.body.authenticatedUserId = uId;
-
-    next();
-});
-
-router.get('/ping', (req, res) => {
+router.get('/ping', partialAuthenticationMiddleware, (req, res) => {
     res.status(200).send({ message: "pong" });
 });
 

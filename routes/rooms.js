@@ -1,20 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const {
+    fullAuthenticationMiddleware,
+    partialAuthenticationMiddleware
+} = require("../classes/utils");
 
-router.use((req, res, next) => {
-    const body = req.authenticator.checkToken(req, res);
-    if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
-    if (body.scope !== "self") return res.status(401).send({ message: "You are not authorized to do this." });
-
-    // get user id from token
-    const uId = req.authenticator.getUserId(req.headers.authorization);
-    //add user id to request
-    req.body.authenticatedUserId = uId;
-
-    next();
-});
-
-router.get('/:serverId', (req, res) => {
+router.get('/:serverId', partialAuthenticationMiddleware, (req, res) => {
     const { serverId } = req.params;
     if (!serverId) return res.status(400).json({ message: "Provide a valid server id" });
     req.database.query("SELECT id, name, description, maxUsers FROM rooms WHERE serverId = ? ORDER BY id", [serverId], (err, result, fields) => {
@@ -37,7 +28,7 @@ router.get('/:serverId', (req, res) => {
     });
 });
 
-router.get('/:serverId/:id', (req, res) => {
+router.get('/:serverId/:id', partialAuthenticationMiddleware, (req, res) => {
     const { serverId, id } = req.params;
     if (!serverId) return res.status(400).json({ message: "Provide a valid server id" });
     if (!id) return res.status(400).json({ message: "Provide a valid room id" });
@@ -61,7 +52,7 @@ router.get('/:serverId/:id', (req, res) => {
 });
 
 // create new room
-router.post('/', (req, res) => {
+router.post('/', fullAuthenticationMiddleware, (req, res) => {
     const { serverId, name, description, maxUsers } = req.body;
     if (!serverId || !name || !description || !maxUsers) return res.status(400).json({ message: "Provide a valid room id" });
 
@@ -76,17 +67,13 @@ router.post('/', (req, res) => {
 });
 
 // join room
-router.post('/join', (req, res) => {
-    var { serverId, userId, roomId } = req.body;
-    if (!serverId || !roomId || !userId) return res.status(400).json({ message: "Provide a valid room id" });
-
-    // check if user is not impersonating someone else
-    const authUId = req.body.authenticatedUserId;
-    if (String(authUId) !== String(userId)) return res.status(401).json({ message: "You are not authorized to do this." });
-    userId = authUId;
+router.post('/join', fullAuthenticationMiddleware, (req, res) => {
+    var { serverId, id, roomId } = req.body;
+    if (!serverId || !roomId || !id) return res.status(400).json({ message: "Provide a valid room id" });
 
     // if user is already in room, remove it
-    req.database.query("DELETE FROM room_users WHERE userId = ?", [userId], (err, result, fields) => {
+    // NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+    req.database.query("DELETE FROM room_users WHERE userId = ?", [id], (err, result, fields) => {
         if (err) return console.error(err);
     });
 
@@ -94,7 +81,7 @@ router.post('/join', (req, res) => {
     // if room id is 0, then the user has left all rooms
     if (roomId !== "0") {
         // add user to joining room
-        req.database.query("INSERT INTO room_users (roomId, userId, serverId) VALUES (?, ?, ?)", [roomId, userId, serverId], (err, result, fields) => {
+        req.database.query("INSERT INTO room_users (roomId, userId, serverId) VALUES (?, ?, ?)", [roomId, id, serverId], (err, result, fields) => {
             if (err) return console.error(err);
             // send complete room data back to client
             req.database.query("SELECT users.id, users.name, users.img FROM users INNER JOIN room_users ON users.id = room_users.userId WHERE room_users.roomId = ? AND room_users.serverId = ?", [roomId, serverId], (err, result, fields) => {
@@ -111,14 +98,14 @@ router.post('/join', (req, res) => {
                     });
                 }
                 res.json(jsonOut);
-                req.eventsHandler.sendEvent("rooms", { action: "userJoin", data: { roomId, userId, serverId, connectedUsers: jsonOut } });
+                req.eventsHandler.sendEvent("rooms", { action: "userJoin", data: { roomId, userId: id, serverId, connectedUsers: jsonOut } });
             });
         });
     }
 });
 
 // get users in room
-router.get('/:id/:serverId/users', (req, res) => {
+router.get('/:id/:serverId/users', partialAuthenticationMiddleware, (req, res) => {
     const { id, serverId } = req.params;
     if (!id) return res.status(400).json({ message: "Provide a valid room id" });
     if (!serverId) return res.status(400).json({ message: "Provide a valid server id" });
@@ -149,7 +136,7 @@ router.get('/:id/:serverId/users', (req, res) => {
     });
 });
 
-router.get('/:id/:serverId/messages', (req, res) => {
+router.get('/:id/:serverId/messages', partialAuthenticationMiddleware, (req, res) => {
     const { id, serverId } = req.params;
     if (!id) return res.status(400).json({ message: "Provide a valid room id" });
     if (!serverId) return res.status(400).json({ message: "Provide a valid server id" });
@@ -190,28 +177,23 @@ router.get('/:id/:serverId/messages', (req, res) => {
     });
 });
 
-router.post('/messages', (req, res) => {
-    var { roomId, userId, serverId, message, } = req.body;
+router.post('/messages', fullAuthenticationMiddleware, (req, res) => {
+    var { roomId, id, serverId, message, } = req.body;
     if (!roomId) return res.status(400).json({ message: "Provide a valid room id" });
-    if (!userId) return res.status(400).json({ message: "Provide a valid user id" });
+    if (!id) return res.status(400).json({ message: "Provide a valid user id" });
     if (!serverId) return res.status(400).json({ message: "Provide a valid server id" });
     if (!message) return res.status(400).json({ message: "Provide a valid message" });
-
-    // check if user is not impersonating someone else
-    const authUId = req.body.authenticatedUserId;
-    if (req.deployMode !== "dev" && String(authUId) !== String(userId)) return res.status(401).json({ message: "You are not authorized to do this." });
-    if (req.deployMode !== "dev") userId = authUId;
 
     // transform js date to mysql date
     // const jsDate = new Date(date);
     // const mysqlDate = jsDate.toISOString().slice(0, 19).replace('T', ' ');
 
-    req.database.query("INSERT INTO room_messages (roomId, userId, serverId, message) VALUES (?, ?, ?, ?)", [roomId, userId, serverId, message], (err, result, fields) => {
+    req.database.query("INSERT INTO room_messages (roomId, userId, serverId, message) VALUES (?, ?, ?, ?)", [roomId, id, serverId, message], (err, result, fields) => {
         if (err) {
             res.status(400).json({ message: "Error sending the message!" });
             return console.error(err);
         }
-        req.eventsHandler.sendEvent("messages", { action: "newMessage", data: { roomId, userId, message, serverId, messageId: result.insertId, affectedRows: result.affectedRows } });
+        req.eventsHandler.sendEvent("messages", { action: "newMessage", data: { roomId, userId: id, message, serverId, messageId: result.insertId, affectedRows: result.affectedRows } });
         res.json({ message: "Message sent!" });
     });
 });

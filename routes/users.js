@@ -2,29 +2,12 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const path = require("path");
+const {
+    fullAuthenticationMiddleware,
+    partialAuthenticationMiddleware
+} = require("../classes/utils");
 
-router.use((req, res, next) => {
-    // check if the type of the request is a GET
-    if (req.method === "GET") {
-        // check if the endpoint contains /image
-        if (req.url.includes("/image")) {
-            return next();
-        }
-    }
-
-    const body = req.authenticator.checkToken(req, res);
-    if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
-    if (body.scope !== "self") return res.status(401).send({ message: "You are not authorized to do this." });
-
-    // get user id from token
-    const uId = req.authenticator.getUserId(req.headers.authorization);
-    //add user id to request
-    req.body.authenticatedUserId = uId;
-
-    next();
-});
-
-router.get("/:id", (req, res) => {
+router.get("/:id", partialAuthenticationMiddleware, (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).send({ message: "You messed up the request." });
 
@@ -43,10 +26,8 @@ router.get("/:id", (req, res) => {
     });
 });
 
-// THIS HAS NO AUTHENTICATION
-router.get("/image/:id", (req, res) => {
+router.get("/image/:id", partialAuthenticationMiddleware, (req, res) => {
     var { id } = req.params;
-    res.setHeader("Content-Type", "image/*,image/png");
     // maybe good? IDK
     if (id.includes(".")) id = id.split(".")[0];
     const filePath = path.resolve("./", req.config.uploader.uploadDirectory, id + ".png");
@@ -68,14 +49,9 @@ router.get("/image/:id", (req, res) => {
     // res.status(404).send("File not found");
 });
 
-router.post("/image", (req, res) => {
+router.post("/image", fullAuthenticationMiddleware, (req, res) => {
     var { id, image } = req.body;
     if (!id || !image) return res.status(400).send({ message: "You messed up the request." });
-
-    // check if user is not impersonating another user
-    const authUId = req.body.authenticatedUserId;
-    if (String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
-    id = authUId;
 
     let filePath = req.config.uploader.uploadDirectory
     // check if the folder and the subfolder exists, if not create them
@@ -108,7 +84,7 @@ router.post("/image", (req, res) => {
     });
 });
 
-router.get("/status/:id", (req, res) => {
+router.get("/status/:id", partialAuthenticationMiddleware, (req, res) => {
     const { id } = req.query;
     if (!id) return res.status(400).send({ message: "You messed up the request." });
 
@@ -132,14 +108,9 @@ router.get("/status/:id", (req, res) => {
 });
 
 // update user status
-router.post('/status', (req, res) => {
+router.post('/status', fullAuthenticationMiddleware, (req, res) => {
     let { id, status } = req.body;
     if (!id || !status) return res.status(400).send({ message: "You messed up the request." });
-
-    // check if user is not impersonating another user
-    const authUId = req.body.authenticatedUserId;
-    if (String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
-    id = authUId;
 
     // set online status of user to offline
     req.database.query("UPDATE users SET online = ? WHERE id = ?", [status, id], function (err, result, fields) {
@@ -156,14 +127,9 @@ router.post('/status', (req, res) => {
     });
 });
 
-router.post("/customStatus", (req, res) => {
+router.post("/customStatus", fullAuthenticationMiddleware, (req, res) => {
     let { id, status } = req.body;
     if (!id || !status) return res.status(400).send({ message: "You messed up the request." });
-
-    // check if user is not impersonating another user
-    const authUId = req.body.authenticatedUserId;
-    if (String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
-    id = authUId;
 
     // update user status
     req.database.query("UPDATE user_status SET status = ? WHERE userId = ?", [status, id], (err, result, fields) => {
@@ -175,7 +141,7 @@ router.post("/customStatus", (req, res) => {
 });
 
 // update volume value of existing user
-router.post('/volume', (req, res) => {
+router.post('/volume', partialAuthenticationMiddleware, (req, res) => {
     const body = req.body;
     const id = body.id;
     const user = body.status;
@@ -188,7 +154,7 @@ router.post('/volume', (req, res) => {
 })
 
 // get personal volume levels from user id
-router.get('/volume/:name', (req, res) => {
+router.get('/volume/:name', partialAuthenticationMiddleware, (req, res) => {
     const { name } = req.params;
 
     req.database.query("SELECT otherUser, volume FROM userVolumes WHERE me = ?", [name], function (err, result, fields) {
@@ -210,7 +176,7 @@ router.get('/volume/:name', (req, res) => {
 })
 
 // get volume level of specific user
-router.get('/volume/:nick1/:nick2', (req, res) => {
+router.get('/volume/:nick1/:nick2', partialAuthenticationMiddleware, (req, res) => {
     const { nick1, nick2 } = req.params;
 
     req.database.query("SELECT otherUser, volume FROM userVolumes WHERE me = ? AND otherUser = ?", [nick1, nick2], function (err, result, fields) {
@@ -232,9 +198,8 @@ router.get('/volume/:nick1/:nick2', (req, res) => {
 });
 
 // get friends of user
-router.get('/friends/:id', (req, res) => {
+router.get('/friends/:id', fullAuthenticationMiddleware, (req, res) => {
     const { id } = req.params;
-
     if (!id) return res.status(400).send({ message: "You messed up the request." });
 
     req.database.query(`
@@ -313,18 +278,9 @@ router.get('/friends/:id', (req, res) => {
 })
 
 // operation on friend request
-router.post('/friend/request', (req, res) => {
-    const body = req.body;
-    var id = body.id;
-    const friendId = body.friendId;
-    const operation = body.operation;
-
+router.post('/friend/request', fullAuthenticationMiddleware, (req, res) => {
+    const { id, friendId, operation } = req.body;
     if (!id || !friendId || !operation) return res.status(400).send({ message: "You messed up the request." });
-
-    // check if user is not impersonating another user
-    const authUId = body.authenticatedUserId;
-    if (String(authUId) !== String(id)) return res.status(401).json({ message: "You are not authorized to do this." });
-    id = authUId;
 
     switch (operation) {
         case "add":
