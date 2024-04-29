@@ -12,6 +12,8 @@ class Logger {
         this.logFile = path.resolve("./", this.path, this.config.fileName);
 
         this.log = this.log.bind(this);
+        this.error = this.error.bind(this);
+        this.warn = this.warn.bind(this);
         this.checkFolder();
         this.checkFile();
         this.checkOldFiles();
@@ -19,6 +21,8 @@ class Logger {
 
         this.internalId = this.id();
         console.log = this.log;
+        console.error = this.error;
+        console.warn = this.warn;
         console.log("------------------------- LOG STARTED -------------------------");
     }
 
@@ -139,7 +143,65 @@ class Logger {
         const date = new Date();
         // check if date is single digit, if so, add a 0 before it
         var dateString = `[${date.getDate() < 10 ? "0" + date.getDate() : date.getDate()}/${date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1}/${date.getFullYear()} ${date.getHours() < 10 ? "0" + date.getHours() : date.getHours()}:${date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes()}:${date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds()}]`;
-        args.unshift(this.internalId + " | " + dateString);
+        args.unshift(this.internalId + " | " + dateString + " | INFO");
+        // create message
+        const message = Array.from(args).join(" ") + "\r\n"
+        // write to stdout
+        process.stdout.write(message);
+        // write to log file
+        if (!this.logStream) return;
+        this.logStream.write(message);
+        // check if file size is bigger than 50MB
+        if (this.logStream.bytesWritten > this.config.maxFileSize) {
+            // rotate log file
+            await this.rotate();
+        }
+    }
+
+    async error(...args) {
+        this.checkFile();
+        // check if args have array or object, if so, stringify it
+        args = args.map(arg => {
+            if (typeof arg === "object") {
+                return JSON.stringify(arg);
+            } else {
+                return arg;
+            }
+        });
+        // add date to log as DD/MM/YYYY HH:MM:SS
+        const date = new Date();
+        // check if date is single digit, if so, add a 0 before it
+        var dateString = `[${date.getDate() < 10 ? "0" + date.getDate() : date.getDate()}/${date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1}/${date.getFullYear()} ${date.getHours() < 10 ? "0" + date.getHours() : date.getHours()}:${date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes()}:${date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds()}]`;
+        args.unshift(this.internalId + " | " + dateString + " | ERROR");
+        // create message
+        const message = Array.from(args).join(" ") + "\r\n"
+        // write to stdout
+        process.stdout.write(message);
+        // write to log file
+        if (!this.logStream) return;
+        this.logStream.write(message);
+        // check if file size is bigger than 50MB
+        if (this.logStream.bytesWritten > this.config.maxFileSize) {
+            // rotate log file
+            await this.rotate();
+        }
+    }
+
+    async warn(...args) {
+        this.checkFile();
+        // check if args have array or object, if so, stringify it
+        args = args.map(arg => {
+            if (typeof arg === "object") {
+                return JSON.stringify(arg);
+            } else {
+                return arg;
+            }
+        });
+        // add date to log as DD/MM/YYYY HH:MM:SS
+        const date = new Date();
+        // check if date is single digit, if so, add a 0 before it
+        var dateString = `[${date.getDate() < 10 ? "0" + date.getDate() : date.getDate()}/${date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1}/${date.getFullYear()} ${date.getHours() < 10 ? "0" + date.getHours() : date.getHours()}:${date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes()}:${date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds()}]`;
+        args.unshift(this.internalId + " | " + dateString + " | WARN");
         // create message
         const message = Array.from(args).join(" ") + "\r\n"
         // write to stdout
