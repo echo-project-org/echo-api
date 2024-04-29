@@ -1,36 +1,27 @@
 const express = require("express");
 const router = express.Router();
+const {
+    fullAuthenticationMiddleware,
+    partialAuthenticationMiddleware
+} = require("../classes/utils");
 
-router.use((req, res, next) => {
-    const body = req.authenticator.checkToken(req, res);
-    if (!body) return res.status(401).send({ message: "You are not authorized to do this." });
-    if (body.scope !== "self") return res.status(401).send({ message: "You are not authorized to do this." });
-
-    // get user id from token
-    const uId = req.authenticator.getUserId(req.headers.authorization);
-    //add user id to request
-    req.body.authenticatedUserId = uId;
-
-    next();
-});
-
-router.get('/messages', (req, res) => {
+router.subscribe('/messages', partialAuthenticationMiddleware, (req, res) => {
     req.eventsHandler.addEvent('messages', req, res);
 });
 
-router.get("/rooms", (req, res) => {
+router.subscribe("/rooms", partialAuthenticationMiddleware, (req, res) => {
     req.eventsHandler.addEvent('rooms', req, res);
 });
 
-router.get("/users", (req, res) => {
+router.subscribe("/users", partialAuthenticationMiddleware, (req, res) => {
     req.eventsHandler.addEvent('users', req, res);
 });
 
-router.get("/servers", (req, res) => {
+router.subscribe("/servers", partialAuthenticationMiddleware, (req, res) => {
     req.eventsHandler.addEvent('servers', req, res);
 });
 
-router.get("/", (req, res) => {
+router.get("/", partialAuthenticationMiddleware, (req, res) => {
     // get list of events
     const events = req.eventsHandler.getEvents();
     res.json(events);

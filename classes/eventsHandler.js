@@ -23,9 +23,9 @@ class EventsHandler {
     }
 
     const headers = {
-        'Content-Type': 'text/event-stream',
-        'Connection': 'keep-alive',
-        'Cache-Control': 'no-cache'
+      'Content-Type': 'text/event-stream',
+      'Connection': 'keep-alive',
+      'Cache-Control': 'no-cache'
     };
     res.writeHead(200, headers);
     const data = JSON.stringify({ status: "success", userId });
@@ -33,14 +33,15 @@ class EventsHandler {
 
     this.events[event].push({ id: userId, res });
 
-    req.on('close', () => {
-        console.log(`${userId} Connection closed`);
-        this.events[event] = this.events[event].filter(client => client.id !== userId);
-    });
+    // maybe we don't need this???? WHO KNOWS
+    // req.on('close', () => {
+    //   console.log(`${userId} Connection closed`);
+    //   this.events[event] = this.events[event].filter(client => client.id !== userId);
+    // });
 
-    req.on('error', () => {
-        console.log(`${userId} Connection error`);
-        this.events[event] = this.events[event].filter(client => client.id !== userId);
+    req.on('error', (e) => {
+      console.log(`Subscriber: ${userId} - Event connection error: ${e.message}`);
+      this.events[event] = this.events[event].filter(client => client.id !== userId);
     });
   }
 
