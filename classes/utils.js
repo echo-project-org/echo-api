@@ -12,7 +12,7 @@ function fullAuthenticationMiddleware(req, res, next) {
   // check if the token has a valid userId
   if (tokenUid) {
     // check if the body of the request has a valid id
-    const id = req.body?.id || req.params?.id;
+    const id = String(req.body?.id || req.params?.id);
     if (!id) {
       // if not then use the id from the token
       console.warn(`User ${tokenUid} is making a request without an id.`);
