@@ -115,13 +115,17 @@ class MediasoupHandler {
             if (this.routers.get(rId)) {
                 resolve(true);
             } else {
-                let worker = await this._getMinUsageWorker();
-                let router = await worker.createRouter({ mediaCodecs: this.codecs });
-                this.routers.set(rId, {
-                    router: router,
-                    transports: new Map()
-                });
-                resolve(true);
+                try {
+                    let worker = await this._getMinUsageWorker();
+                    let router = await worker.createRouter({ mediaCodecs: this.codecs });
+                    this.routers.set(rId, {
+                        router: router,
+                        transports: new Map()
+                    });
+                    resolve(true);
+                } catch (error) {
+                    reject(error);
+                }
             }
         });
     }
@@ -137,17 +141,21 @@ class MediasoupHandler {
             if (!router) {
                 reject("Router not found!");
             } else {
-                //close all transports
-                router.transports.forEach((value, key) => {
-                    value.audioInTransport.close();
-                    value.audioOutTransport.close();
-                    value.videoInTransport.close();
-                    value.videoOutTransport.close();
-                });
+                try {
+                    //close all transports
+                    router.transports.forEach((value, key) => {
+                        value.audioInTransport.close();
+                        value.audioOutTransport.close();
+                        value.videoInTransport.close();
+                        value.videoOutTransport.close();
+                    });
 
-                router.close();
-                this.routers.delete(rId);
-                resolve(true);
+                    router.close();
+                    this.routers.delete(rId);
+                    resolve(true);
+                } catch (error) {
+                    reject(error);
+                }
             }
         });
     }
@@ -177,11 +185,18 @@ class MediasoupHandler {
                     preferUdp: true,
                     appData: { peerId: uId }
                 }
-
-                const audioInTransport = await router.createWebRtcTransport(transportParams);
-                const audioOutTransport = await router.createWebRtcTransport(transportParams);
-                const videoInTransport = await router.createWebRtcTransport(transportParams);
-                const videoOutTransport = await router.createWebRtcTransport(transportParams);
+                const audioInTransport = null;
+                const audioOutTransport = null;
+                const videoInTransport = null;
+                const videoOutTransport = null;
+                try {
+                    audioInTransport = await router.createWebRtcTransport(transportParams);
+                    audioOutTransport = await router.createWebRtcTransport(transportParams);
+                    videoInTransport = await router.createWebRtcTransport(transportParams);
+                    videoOutTransport = await router.createWebRtcTransport(transportParams);
+                } catch (error) {
+                    reject(error);
+                }
 
                 router.transports.set(uId, {
                     "audioInTransport": audioInTransport,
@@ -221,12 +236,16 @@ class MediasoupHandler {
                 if (!transports) {
                     reject("Transports not found!");
                 } else {
-                    transports.audioInTransport.close();
-                    transports.audioOutTransport.close();
-                    transports.videoInTransport.close();
-                    transports.videoOutTransport.close();
-                    router.transports.delete(uId);
-                    resolve(true);
+                    try {
+                        transports.audioInTransport.close();
+                        transports.audioOutTransport.close();
+                        transports.videoInTransport.close();
+                        transports.videoOutTransport.close();
+                        router.transports.delete(uId);
+                        resolve(true);
+                    } catch (error) {
+                        reject(error);
+                    }
                 }
             }
         });
@@ -255,11 +274,15 @@ class MediasoupHandler {
                 if (!transports) {
                     reject("Transports not found!");
                 } else {
-                    await transports[type].connect({
-                        dtlsParameters: data.dtlsParameters,
-                    });
+                    try {
+                        await transports[type].connect({
+                            dtlsParameters: data.dtlsParameters,
+                        });
 
-                    resolve(true);
+                        resolve(true);
+                    } catch (error) {
+                        reject(error);
+                    }
                 }
             }
         });
@@ -282,15 +305,19 @@ class MediasoupHandler {
                 if (!transports) {
                     reject("Transports not found!");
                 } else {
-                    let producer = await transports.audioInTransport.produce({
-                        id: data.id,
-                        kind: data.kind,
-                        rtpParameters: data.rtpParameters,
-                        appData: data.appData
-                    });
+                    try {
+                        let producer = await transports.audioInTransport.produce({
+                            id: data.id,
+                            kind: data.kind,
+                            rtpParameters: data.rtpParameters,
+                            appData: data.appData
+                        });
 
-                    transports.audioInProducer = producer;
-                    resolve(producer.id);
+                        transports.audioInProducer = producer;
+                        resolve(producer.id);
+                    } catch (error) {
+                        reject(error);
+                    }
                 }
             }
         });
@@ -313,18 +340,22 @@ class MediasoupHandler {
                 if (!transports) {
                     reject("Transports not found!");
                 } else {
-                    let consumer = await transports.audioOutTransport.consume({
-                        producerId: data.producerId,
-                        rtpCapabilities: data.rtpCapabilities,
-                        paused: true
-                    });
+                    try {
+                        let consumer = await transports.audioOutTransport.consume({
+                            producerId: data.producerId,
+                            rtpCapabilities: data.rtpCapabilities,
+                            paused: true
+                        });
 
-                    resolve({
-                        id: consumer.id,
-                        producerId: data.producerId,
-                        kind: consumer.kind,
-                        rtpParameters: consumer.rtpParameters
-                    });
+                        resolve({
+                            id: consumer.id,
+                            producerId: data.producerId,
+                            kind: consumer.kind,
+                            rtpParameters: consumer.rtpParameters
+                        });
+                    } catch (error) {
+                        reject(error);
+                    }
                 }
             }
         });
@@ -346,11 +377,15 @@ class MediasoupHandler {
                 if (!transports) {
                     reject("Transports not found!");
                 } else {
-                    if (transports.audioOutProducer) {
-                        await transports.audioOutProducer.resume();
-                        resolve(true);
-                    } else {
-                        reject("Producer not found!");
+                    try {
+                        if (transports.audioOutProducer) {
+                            await transports.audioOutProducer.resume();
+                            resolve(true);
+                        } else {
+                            reject("Producer not found!");
+                        }
+                    } catch (error) {
+                        reject(error);
                     }
                 }
             }
