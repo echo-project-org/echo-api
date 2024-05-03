@@ -97,8 +97,27 @@ router.post('/join', fullAuthenticationMiddleware, (req, res) => {
                         });
                     });
                 }
-                res.json(jsonOut);
-                req.eventsHandler.sendEvent("rooms", { action: "userJoin", data: { roomId, userId: id, serverId, connectedUsers: jsonOut } });
+                // create router for room
+                req.ms.createRouter(serverId + "@" + roomId)
+                    .then((router) => {
+                        // create transports for user
+                        req.ms.createTransports(id, roomId)
+                        .then((data) => {
+                            // send back router and connected users
+                            res.json({ router, data, connectedUsers: jsonOut });
+                            req.eventsHandler.sendEvent("rooms", { action: "userJoin", data: { roomId, userId: id, serverId, connectedUsers: jsonOut } });
+                        })
+                        .error((err) => {
+                            // handle error
+                            console.error(err);
+                            res.status(500).json({ message: err });
+                        })
+                    })
+                    .error((err) => {
+                        // handle error
+                        console.error(err);
+                        res.status(500).json({ message: err});
+                    });
             });
         });
     }
