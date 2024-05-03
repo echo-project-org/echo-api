@@ -261,25 +261,25 @@ class MediasoupHandler {
     */
     async transportConnect(type, uId, rId, data) {
         return new Promise(async (resolve, reject) => {
-            //check type
-            if (type !== "audioInTransport" && type !== "audioOutTransport" && type !== "videoInTransport" && type !== "videoOutTransport") {
-                reject("Invalid transport type!");
-            }
-
             let router = this.routers.get(rId);
             if (!router) {
                 reject("Router not found!");
             } else {
                 let transports = router.transports.get(uId);
                 if (!transports) {
-                    reject("Transports not found!");
+                    reject("Seems like the user is trying to connect without joining a room!");
                 } else {
                     try {
-                        await transports[type].connect({
-                            dtlsParameters: data.dtlsParameters,
-                        });
+                        const t = transports[type]
+                        if(!t) reject("Transport not found!");
 
-                        resolve(true);
+                        t.connect({
+                            dtlsParameters: data.dtlsParameters,
+                        }).then(() => {
+                            resolve(true);
+                        }).error((err) => {
+                            reject(err);
+                        });
                     } catch (error) {
                         reject(error);
                     }
