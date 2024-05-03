@@ -21,6 +21,9 @@ const cache = new CacheHandler(config);
 const EventsHandler = require("./classes/eventsHandler.js");
 const eventsHandler = new EventsHandler();
 
+const msHandler = require("./classes/mediasoupHandler");
+const ms = new msHandler();
+
 // add body parser middleware for api requests
 server.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 server.use(bodyParser.json({ limit: '5mb' }));
@@ -39,6 +42,7 @@ server.use((req, res, next) => {
     if (!req.cache) req.cache = cache;
     if (!req.eventsHandler) req.eventsHandler = eventsHandler;
     if (!req.config) req.config = config;
+    if (!req.ms) req.ms = ms;
 
     if (!req.deployMode) req.deployMode = config.env;
 
