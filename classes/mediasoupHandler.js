@@ -249,8 +249,28 @@ class MediasoupHandler {
     }
 
     /**
+     * Convert client side transport type to server side
+     * @param {string} type Type of transport [audioIn, audioOut, videoIn, videoOut]
+     * @returns string Server side transport type
+     */
+    _convertClientSideTransportTypeToServerSide(type) {
+        switch (type) {
+            case "audioIn":
+                return "audioOut";
+            case "audioOut":
+                return "audioIn";
+            case "videoIn":
+                return "videoOut";
+            case "videoOut":
+                return "videoIn";
+            default:
+                return null;
+        }
+    }
+
+    /**
      * Used to connect the transport
-     * @param {*} type Type of transport [audioInTransport, audioOutTransport, videoInTransport, videoOutTransport]
+     * @param {*} type Type of transport [audioIn, audioOut, videoIn, videoOut]
      * @param {*} uId  User id
      * @param {*} rId  Room id
      * @param {*} data Data given by mediasoup client
@@ -258,6 +278,9 @@ class MediasoupHandler {
     */
     async transportConnect(type, uId, rId, data) {
         return new Promise(async (resolve, reject) => {
+            type = this._convertClientSideTransportTypeToServerSide(type);
+            if(!type) reject("Invalid transport type");
+            
             let router = this.routers.get(rId);
             if (!router) {
                 reject("Router not found!");
