@@ -109,7 +109,7 @@ class MediasoupHandler {
      * @param {*} rId Room id
      * @returns Promise
      */
-    async createRouter(rId) {
+    createRouter(rId) {
         return new Promise(async (resolve, reject) => {
             //check if room already exists
             if (this.routers.get(rId)) {
@@ -135,7 +135,7 @@ class MediasoupHandler {
      * @param {*} rId Room id
      * @returns Promise
      */
-    async deleteRouter(rId) {
+    deleteRouter(rId) {
         return new Promise(async (resolve, reject) => {
             let router = this.routers.get(rId);
             if (!router) {
@@ -166,10 +166,10 @@ class MediasoupHandler {
      * @param {*} rId Room id
      * @returns Promise
      */
-    async createTransports(uId, rId) {
+    createTransports(uId, rId) {
         //find router in map
         return new Promise(async (resolve, reject) => {
-            let router = this.routers.get(rId);
+            let { router, transports } = this.routers.get(rId);
             if (!router) {
                 reject("Router not found!");
             } else {
@@ -185,20 +185,17 @@ class MediasoupHandler {
                     preferUdp: true,
                     appData: { peerId: uId }
                 }
-                const audioInTransport = null;
-                const audioOutTransport = null;
-                const videoInTransport = null;
-                const videoOutTransport = null;
                 try {
-                    audioInTransport = await router.createWebRtcTransport(transportParams);
-                    audioOutTransport = await router.createWebRtcTransport(transportParams);
-                    videoInTransport = await router.createWebRtcTransport(transportParams);
-                    videoOutTransport = await router.createWebRtcTransport(transportParams);
+                    var audioInTransport = await router.createWebRtcTransport(transportParams);
+                    var audioOutTransport = await router.createWebRtcTransport(transportParams);
+                    var videoInTransport = await router.createWebRtcTransport(transportParams);
+                    var videoOutTransport = await router.createWebRtcTransport(transportParams);
                 } catch (error) {
+                    throw error;
                     reject(error);
                 }
 
-                router.transports.set(uId, {
+                transports.set(uId, {
                     "audioInTransport": audioInTransport,
                     "audioOutTransport": audioOutTransport,
                     "videoInTransport": videoInTransport,

@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const { fullAuthenticationMiddleware } = require("../classes/utils");
+
 // connect transport
 router.post('/transport/connect', fullAuthenticationMiddleware, (req, res) => {
     const { id, roomId, type, data } = req.body;

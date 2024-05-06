@@ -21,7 +21,7 @@ const cache = new CacheHandler(config);
 const EventsHandler = require("./classes/eventsHandler.js");
 const eventsHandler = new EventsHandler();
 
-const msHandler = require("./classes/mediasoupHandler");
+const msHandler = require("./classes/mediasoupHandler.js");
 const ms = new msHandler();
 
 // add body parser middleware for api requests
