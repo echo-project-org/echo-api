@@ -109,16 +109,17 @@ class MediasoupHandler {
      * @param {*} rId Room id
      * @returns Promise
      */
-    createRouter(rId) {
+    createRouter(rId, sId) {
         return new Promise(async (resolve, reject) => {
             //check if room already exists
-            if (this.routers.get(rId)) {
+            let fullRoomId = rId + "@" + sId;
+            if (this.routers.get(fullRoomId)) {
                 resolve(true);
             } else {
                 try {
                     let worker = await this._getMinUsageWorker();
                     let router = await worker.createRouter({ mediaCodecs: this.codecs });
-                    this.routers.set(rId, {
+                    this.routers.set(fullRoomId, {
                         router: router,
                         transports: new Map()
                     });
@@ -133,11 +134,13 @@ class MediasoupHandler {
     /**
      * Delete a mediasoup router (room)
      * @param {*} rId Room id
+     * @param {*} sId Server id
      * @returns Promise
      */
-    deleteRouter(rId) {
+    deleteRouter(rId, sId) {
         return new Promise(async (resolve, reject) => {
-            let router = this.routers.get(rId);
+            let fullRoomId = rId + "@" + sId;
+            let router = this.routers.get(fullRoomId);
             if (!router) {
                 reject("Router not found!");
             } else {
@@ -151,7 +154,7 @@ class MediasoupHandler {
                     });
 
                     router.close();
-                    this.routers.delete(rId);
+                    this.routers.delete(fullRoomId);
                     resolve(true);
                 } catch (error) {
                     reject(error);
@@ -164,12 +167,14 @@ class MediasoupHandler {
      * Create transports for a user in a room
      * @param {*} uId User id
      * @param {*} rId Room id
+     * @param {*} sId Server id
      * @returns Promise
      */
-    createTransports(uId, rId) {
+    createTransports(uId, rId, sId) {
         //find router in map
         return new Promise(async (resolve, reject) => {
-            let { router, transports } = this.routers.get(rId);
+            let fullRoomId = rId + "@" + sId;
+            let { router, transports } = this.routers.get(fullRoomId);
             if (!router) {
                 reject("Router not found!");
             } else {
@@ -191,7 +196,6 @@ class MediasoupHandler {
                     var videoInTransport = await router.createWebRtcTransport(transportParams);
                     var videoOutTransport = await router.createWebRtcTransport(transportParams);
                 } catch (error) {
-                    throw error;
                     reject(error);
                 }
 
@@ -223,9 +227,10 @@ class MediasoupHandler {
      * @param {*} rId Room id
      * @returns Promise  
      */
-    async deleteTransports(uId, rId) {
+    async deleteTransports(uId, rId, sId) {
         return new Promise(async (resolve, reject) => {
-            let router = this.routers.get(rId);
+            let fullRoomId = rId + "@" + sId;
+            let router = this.routers.get(fullRoomId);
             if (!router) {
                 reject("Router not found!");
             } else {
@@ -273,15 +278,18 @@ class MediasoupHandler {
      * @param {*} type Type of transport [audioIn, audioOut, videoIn, videoOut]
      * @param {*} uId  User id
      * @param {*} rId  Room id
+     * @param {*} sId  Server id
      * @param {*} data Data given by mediasoup client
      * @returns Promise
     */
-    async transportConnect(type, uId, rId, data) {
+    async transportConnect(type, uId, rId, sId, data) {
         return new Promise(async (resolve, reject) => {
             type = this._convertClientSideTransportTypeToServerSide(type);
             if(!type) reject("Invalid transport type");
-            
-            let router = this.routers.get(rId);
+
+            let fullRoomId = rId + "@" + sId;
+            let router = this.routers.get(fullRoomId);
+
             if (!router) {
                 reject("Router not found!");
             } else {
@@ -312,12 +320,14 @@ class MediasoupHandler {
      * Used to produce audio
      * @param {*} uId  User id
      * @param {*} rId  Room id
+     * @param {*} sId  Server id
      * @param {*} data Data given by mediasoup client
      * @returns Promise with producer id (send to mediasoup client)
      */
-    async produceAudio(uId, rId, data) {
+    async produceAudio(uId, rId, sId, data) {
         return new Promise(async (resolve, reject) => {
-            let router = this.routers.get(rId);
+            let fullRoomId = rId + "@" + sId;
+            let router = this.routers.get(fullRoomId);
             if (!router) {
                 reject("Router not found!");
             } else {
@@ -347,12 +357,14 @@ class MediasoupHandler {
      * Used to consume audio
      * @param {*} uId  User id
      * @param {*} rId  Room id
+     * @param {*} sId  Server id
      * @param {*} data Data given by mediasoup client
      * @returns Promise
      */
-    async consumeAudio(uId, rId, data) {
+    async consumeAudio(uId, rId, sId, data) {
         return new Promise(async (resolve, reject) => {
-            let router = this.routers.get(rId);
+            let fullRoomId = rId + "@" + sId;
+            let router = this.routers.get(fullRoomId);
             if (!router) {
                 reject("Router not found!");
             } else {
@@ -385,11 +397,13 @@ class MediasoupHandler {
      * Resume audio stream once client is ready to receive
      * @param {*} uId  User id
      * @param {*} rId  Room id
+     * @param {*} sId  Server id
      * @returns Promise
      */
-    async resumeAudio(uId, rId) {
+    async resumeAudio(uId, rId, sId) {
         return new Promise(async (resolve, reject) => {
-            let router = this.routers.get(rId);
+            let fullRoomId = rId + "@" + sId;
+            let router = this.routers.get(fullRoomId);
             if (!router) {
                 reject("Router not found!");
             } else {
