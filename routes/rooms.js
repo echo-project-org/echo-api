@@ -106,12 +106,11 @@ router.post('/join', fullAuthenticationMiddleware, (req, res) => {
           });
         }
         // create router for room
-        const routerId = serverId + "@" + roomId;
-        req.ms.createRouter(routerId)
+        req.ms.createRouter(roomId, serverId)
           .then((router) => {
-            console.log("Router created, connecting transports", routerId)
+            console.log("Router created, connecting transports", roomId + "@" + serverId);
             // create transports for user
-            req.ms.createTransports(id, routerId)
+            req.ms.createTransports(id, roomId, serverId)
               .then((data) => {
                 // send back router and connected users
                 res.json({ router, data, connectedUsers: jsonOut });
