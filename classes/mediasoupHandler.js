@@ -212,10 +212,12 @@ class MediasoupHandler {
 
                 resolve({
                     "routerCapabilities": router.rtpCapabilities,
-                    audioInTransport,
-                    audioOutTransport,
-                    videoInTransport,
-                    videoOutTransport
+                    "transports": {
+                        "audioOut": audioInTransport,
+                        "audioIn": audioOutTransport,
+                        "videoOut": videoInTransport,
+                        "videoIn": videoOutTransport
+                    }
                 })
             }
         });
