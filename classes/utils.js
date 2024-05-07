@@ -3,6 +3,23 @@ function checkEmail(email) {
   return re.test(email);
 }
 
+function getRoomIdFromUserId(db, userId) {
+  return new Promise((resolve, reject) => {
+    let roomId, serverId;
+    db.query("SELECT roomId, serverId FROM room_users WHERE userId = ?", [userId], (err, result, fields) => {
+      if (err) reject(err);
+      if (result.length > 0) {
+        const plate = result[0];
+        roomId = plate.roomId;
+        serverId = plate.serverId;
+        resolve({ roomId, serverId });
+      } else {
+        reject("User not found in any room.");
+      }
+    });
+  });
+}
+
 function fullAuthenticationMiddleware(req, res, next) {
   const tokenBody = req.authenticator.checkToken(req, res);
   if (!tokenBody) return res.status(401).send({ message: "You are not authorized to do this." });
@@ -80,6 +97,7 @@ function partialAuthenticationMiddleware(req, res, next) {
 
 module.exports = {
   checkEmail,
+  getRoomIdFromUserId,
   fullAuthenticationMiddleware,
   partialAuthenticationMiddleware
 }
