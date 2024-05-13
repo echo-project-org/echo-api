@@ -195,30 +195,66 @@ class MediasoupHandler {
                     var audioOutTransport = await router.createWebRtcTransport(transportParams);
                     var videoInTransport = await router.createWebRtcTransport(transportParams);
                     var videoOutTransport = await router.createWebRtcTransport(transportParams);
+
+                    transports.set(uId, {
+                        "audioInTransport": audioInTransport,
+                        "audioOutTransport": audioOutTransport,
+                        "videoInTransport": videoInTransport,
+                        "videoOutTransport": videoOutTransport,
+                        "audioInProducer": null,
+                        "audioOutProducer": null,
+                        "videoInProducer": null,
+                        "videoOutProducer": null
+                    });
+
+                    resolve({
+                        "routerCapabilities": router.rtpCapabilities,
+                        "transports": {
+                            "audioOut": {
+                                id: audioInTransport.id,
+                                iceParameters: audioInTransport.iceParameters,
+                                iceCandidates: audioInTransport.iceCandidates,
+                                dtlsParameters: audioInTransport.dtlsParameters,
+                                sctpParameters: audioInTransport.sctpParameters,
+                                iceServers: audioInTransport.iceServers,
+                                iceTransportPolicy: audioInTransport.iceTransportPolicy,
+                                additionalSettings: audioInTransport.additionalSettings,
+                            },
+                            "audioIn": {
+                                id: audioOutTransport.id,
+                                iceParameters: audioOutTransport.iceParameters,
+                                iceCandidates: audioOutTransport.iceCandidates,
+                                dtlsParameters: audioOutTransport.dtlsParameters,
+                                sctpParameters: audioOutTransport.sctpParameters,
+                                iceServers: audioOutTransport.iceServers,
+                                iceTransportPolicy: audioOutTransport.iceTransportPolicy,
+                                additionalSettings: audioOutTransport.additionalSettings,
+                            },
+                            "videoOut": {
+                                id: videoInTransport.id,
+                                iceParameters: videoInTransport.iceParameters,
+                                iceCandidates: videoInTransport.iceCandidates,
+                                dtlsParameters: videoInTransport.dtlsParameters,
+                                sctpParameters: videoInTransport.sctpParameters,
+                                iceServers: videoInTransport.iceServers,
+                                iceTransportPolicy: videoInTransport.iceTransportPolicy,
+                                additionalSettings: videoInTransport.additionalSettings,
+                            },
+                            "videoIn": {
+                                id: videoOutTransport.id,
+                                iceParameters: videoOutTransport.iceParameters,
+                                iceCandidates: videoOutTransport.iceCandidates,
+                                dtlsParameters: videoOutTransport.dtlsParameters,
+                                sctpParameters: videoOutTransport.sctpParameters,
+                                iceServers: videoOutTransport.iceServers,
+                                iceTransportPolicy: videoOutTransport.iceTransportPolicy,
+                                additionalSettings: videoOutTransport.additionalSettings,
+                            }
+                        }
+                    })
                 } catch (error) {
                     reject(error);
                 }
-
-                transports.set(uId, {
-                    "audioInTransport": audioInTransport,
-                    "audioOutTransport": audioOutTransport,
-                    "videoInTransport": videoInTransport,
-                    "videoOutTransport": videoOutTransport,
-                    "audioInProducer": null,
-                    "audioOutProducer": null,
-                    "videoInProducer": null,
-                    "videoOutProducer": null
-                });
-
-                resolve({
-                    "routerCapabilities": router.rtpCapabilities,
-                    "transports": {
-                        "audioOut": audioInTransport,
-                        "audioIn": audioOutTransport,
-                        "videoOut": videoInTransport,
-                        "videoIn": videoOutTransport
-                    }
-                })
             }
         });
     }
@@ -287,7 +323,7 @@ class MediasoupHandler {
     async transportConnect(type, uId, rId, sId, data) {
         return new Promise(async (resolve, reject) => {
             type = this._convertClientSideTransportTypeToServerSide(type);
-            if(!type) reject("Invalid transport type");
+            if (!type) reject("Invalid transport type");
 
             let fullRoomId = rId + "@" + sId;
             let router = this.routers.get(fullRoomId);
@@ -301,7 +337,7 @@ class MediasoupHandler {
                 } else {
                     try {
                         const t = transports[type]
-                        if(!t) reject("Transport not found!");
+                        if (!t) reject("Transport not found!");
 
                         t.connect({
                             dtlsParameters: data.dtlsParameters,
