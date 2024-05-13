@@ -15,8 +15,8 @@ const authenticator = new OAuth();
 const SQL = require("./classes/mysql");
 const database = new SQL(config);
 
-const CacheHandler = require("./classes/cacheHandler.js");
-const cache = new CacheHandler(config);
+//const CacheHandler = require("./classes/cacheHandler.js");
+//const cache = new CacheHandler(config);
 
 const EventsHandler = require("./classes/eventsHandler.js");
 const eventsHandler = new EventsHandler();
@@ -39,7 +39,7 @@ server.use((req, res, next) => {
     if (!req.authenticator) req.authenticator = authenticator;
     if (!req.utils) req.utils = require("./classes/utils");
     if (!req.database) req.database = database.getConnection();
-    if (!req.cache) req.cache = cache;
+    //if (!req.cache) req.cache = cache;
     if (!req.eventsHandler) req.eventsHandler = eventsHandler;
     if (!req.config) req.config = config;
     if (!req.ms) req.ms = ms;
