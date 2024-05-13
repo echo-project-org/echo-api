@@ -7,7 +7,11 @@ function getRoomIdFromUserId(db, userId) {
   return new Promise((resolve, reject) => {
     let roomId, serverId;
     db.query("SELECT roomId, serverId FROM room_users WHERE userId = ?", [userId], (err, result, fields) => {
-      if (err) reject(err);
+      if (err) {
+        console.error(err); 
+        reject(err);
+      }
+      
       if (result.length > 0) {
         const plate = result[0];
         roomId = plate.roomId;

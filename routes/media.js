@@ -6,14 +6,16 @@ const { fullAuthenticationMiddleware, getRoomIdFromUserId } = require("../classe
 // connect transport
 router.post('/transport/connect', fullAuthenticationMiddleware, (req, res) => {
     const { id, type, data } = req.body;
+    console.log(id)
     if (!id || !type || !data) return res.status(400).json({ message: "Provide transport connection data" });
 
     // Get roomId from db
-    getRoomIdFromUserId(req.db, id).then(({ roomId, serverId }) => {
+    getRoomIdFromUserId(req.database, id).then(({ roomId, serverId }) => {
+        console.log("roomId", roomId, "serverId", serverId)
         req.ms.transportConnect(type, id, roomId, serverId, data)
-            .then(result => res.status(200).json("Transport connected"))
+            .then(result => res.status(200).json({ "res": "Transport connected"}))
             .catch(error => res.status(500).json(error));
-    }).catch(error => res.status(400).json(error));
+    }).catch(error => res.status(400).json("Error getting roomId: " + error));
 
 });
 
