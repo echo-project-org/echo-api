@@ -197,10 +197,10 @@ class MediasoupHandler {
                     var videoOutTransport = await router.createWebRtcTransport(transportParams);
 
                     transports.set(uId, {
-                        "audioInTransport": audioInTransport,
-                        "audioOutTransport": audioOutTransport,
-                        "videoInTransport": videoInTransport,
-                        "videoOutTransport": videoOutTransport,
+                        "audioIn": audioInTransport,
+                        "audioOut": audioOutTransport,
+                        "videoIn": videoInTransport,
+                        "videoOut": videoOutTransport,
                         "audioInProducer": null,
                         "audioOutProducer": null,
                         "videoInProducer": null,
@@ -337,15 +337,14 @@ class MediasoupHandler {
                 } else {
                     try {
                         const t = transports[type]
-                        if (!t) reject("Transport not found!");
+                        console.log(transports)
+                        if (!t) reject("Transport not found! Type: " + type + " - " + fullRoomId);
 
                         t.connect({
-                            dtlsParameters: data.dtlsParameters,
+                            dtlsParameters: data,
                         }).then(() => {
                             resolve(true);
-                        }).error((err) => {
-                            reject(err);
-                        });
+                        })
                     } catch (error) {
                         reject(error);
                     }

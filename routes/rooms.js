@@ -85,7 +85,9 @@ router.post('/join', fullAuthenticationMiddleware, (req, res) => {
     if (err) return console.error(err);
   });
 
-  if (roomId === "0") return res.json({ message: "Left room" });
+  if (roomId === "0") {
+    return res.json({ message: "Left room" });
+  } 
   // if room id is 0, then the user has left all rooms
   if (roomId !== "0") {
     // add user to joining room
