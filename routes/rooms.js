@@ -69,7 +69,7 @@ router.post('/', fullAuthenticationMiddleware, (req, res) => {
 // join room
 router.post('/join', fullAuthenticationMiddleware, (req, res) => {
   var { serverId, id, roomId, deaf, muted } = req.body;
-  if (!serverId || !roomId || !id) return res.status(400).json({ message: "Provide a valid room id" });
+  if (!serverId || !roomId || !id) return res.status(400).json({ message: "Provide valid data" });
   if (!deaf) {
     console.warn("Deaf not provided, setting to false");
     deaf = false;
