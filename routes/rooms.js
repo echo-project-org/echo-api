@@ -79,19 +79,17 @@ router.post('/join', fullAuthenticationMiddleware, (req, res) => {
     muted = false;
   }
 
-  // if user is already in room, remove it
-  // NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-  req.database.query("DELETE FROM room_users WHERE userId = ?", [id], (err, result, fields) => {
-    if (err) return console.error(err);
-  });
-
   if (roomId === "0") {
-    return res.json({ message: "Left room" });
+    // remove user from all rooms
+    req.database.query("DELETE FROM room_users WHERE userId = ?", [id], (err, result, fields) => {
+      if (err) return console.error(err);
+      return res.json({ message: "Left room" });
+    });
   } 
   // if room id is 0, then the user has left all rooms
   if (roomId !== "0") {
     // add user to joining room
-    req.database.query("INSERT INTO room_users (roomId, userId, serverId) VALUES (?, ?, ?)", [roomId, id, serverId], (err, result, fields) => {
+    req.database.query("REPLACE INTO room_users (roomId, userId, serverId) VALUES (?, ?, ?)", [roomId, id, serverId], (err, result, fields) => {
       if (err) return console.error(err);
       // send complete room data back to client
       req.database.query("SELECT users.id, users.name, users.img FROM users INNER JOIN room_users ON users.id = room_users.userId WHERE room_users.roomId = ? AND room_users.serverId = ?", [roomId, serverId], (err, result, fields) => {
