@@ -26,7 +26,7 @@ router.get("/:id", partialAuthenticationMiddleware, (req, res) => {
     });
 });
 
-router.get("/image/:id", partialAuthenticationMiddleware, (req, res) => {
+router.get("/image/:id", (req, res) => {
     var { id } = req.params;
     // maybe good? IDK
     if (id.includes(".")) id = id.split(".")[0];
