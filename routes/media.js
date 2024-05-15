@@ -13,7 +13,7 @@ router.post('/transport/connect', fullAuthenticationMiddleware, (req, res) => {
     getRoomIdFromUserId(req.database, id).then(({ roomId, serverId }) => {
         console.log("roomId", roomId, "serverId", serverId)
         req.ms.transportConnect(type, id, roomId, serverId, data)
-            .then(result => res.status(200).json({ "res": "Transport connected"}))
+            .then(result => res.status(200).json({ "res": "Transport connected" }))
             .catch(error => res.status(500).json(error));
     }).catch(error => res.status(400).json("Error getting roomId: " + error));
 
@@ -21,14 +21,17 @@ router.post('/transport/connect', fullAuthenticationMiddleware, (req, res) => {
 
 // produce audio
 router.post('/audio/produce', fullAuthenticationMiddleware, (req, res) => {
-    const { id, roomId, data } = req.body;
+    const { id, data } = req.body;
     console.log(id)
-    if (!id || !roomId || !data) return res.status(400).json({ message: "Provide valid userId, roomId and mediasoup data" });
-    //TODO get id and room id from db
+    if (!id || !data) return res.status(400).json({ message: "Provide valid userId and mediasoup data" });
 
-    req.ms.produceAudio(id, roomId, data)
-        .then(result => res.status(200).json(result))
-        .catch(error => res.status(500).json(error));
+    // Get roomId from db
+    getRoomIdFromUserId(req.database, id).then(({ roomId, serverId }) => {
+        console.log("roomId", roomId, "serverId", serverId)
+        req.ms.produceAudio(id, roomId, serverId, data)
+            .then(result => res.status(200).json(result))
+            .catch(error => res.status(500).json(error));
+    }).catch(error => res.status(400).json("Error getting roomId: " + error));
 });
 
 // consume audio

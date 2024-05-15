@@ -366,23 +366,25 @@ class MediasoupHandler {
             let fullRoomId = rId + "@" + sId;
             let router = this.routers.get(fullRoomId);
             if (!router) {
+                console.error("Router not found!");
                 reject("Router not found!");
             } else {
                 let transports = router.transports.get(uId);
                 if (!transports) {
+                    console.error("Transports not found!");
                     reject("Transports not found!");
                 } else {
                     try {
-                        let producer = await transports.audioInTransport.produce({
+                        let producer = await transports.audioIn.produce({
                             id: data.id,
                             kind: data.kind,
                             rtpParameters: data.rtpParameters,
                             appData: data.appData
                         });
-
                         transports.audioInProducer = producer;
-                        resolve(producer.id);
+                        resolve({"producerId": producer.id});
                     } catch (error) {
+                        console.error(error);
                         reject(error);
                     }
                 }
