@@ -117,13 +117,16 @@ router.post('/status', fullAuthenticationMiddleware, (req, res) => {
         if (err) console.log(err);
 
         // remove user from any rooms
-        if (status === "0")
+        if (status === "0") {
             req.database.query("DELETE FROM room_users WHERE userId = ?", [id], function (err, result, fields) {
                 if (err) console.log(err);
                 res.status(200).send({ message: "You are now offline!" });
             });
-        res.status(200).send({ message: "Status updated!" });
-        req.eventsHandler.sendEvent("users", { action: "statusUpdate", data: { userId: id, status } });
+
+        } else {
+            res.status(200).send({ message: "Status updated!" });
+            req.eventsHandler.sendEvent("users", { action: "statusUpdate", data: { userId: id, status } });
+        }
     });
 });
 
