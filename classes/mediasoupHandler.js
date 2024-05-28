@@ -175,6 +175,7 @@ class MediasoupHandler {
         return new Promise(async (resolve, reject) => {
             let fullRoomId = rId + "@" + sId;
             let { router, transports } = this.routers.get(fullRoomId);
+
             if (!router) {
                 reject("Router not found!");
             } else {
@@ -382,7 +383,7 @@ class MediasoupHandler {
                             appData: data.appData
                         });
                         transports.audioInProducer = producer;
-                        resolve({"producerId": producer.id});
+                        resolve({ "producerId": producer.id });
                     } catch (error) {
                         console.error(error);
                         reject(error);

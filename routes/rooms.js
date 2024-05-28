@@ -79,13 +79,25 @@ router.post('/join', fullAuthenticationMiddleware, (req, res) => {
     muted = false;
   }
 
+  // find the roomId and serverId the user is in
+  req.database.query("SELECT roomId, serverId FROM room_users WHERE userId = ?", [id], (err, result, fields) => {
+    if (err) return console.error(err);
+    if (result.length > 0) {
+      const plate = result[0];
+      let oldRId = plate.roomId;
+      let oldSId = plate.serverId;
+      // delete transports for user
+      req.ms.deleteTransports(id, oldRId, oldSId)
+    }
+  });
+
   if (roomId === "0") {
     // remove user from all rooms
     req.database.query("DELETE FROM room_users WHERE userId = ?", [id], (err, result, fields) => {
       if (err) return console.error(err);
       return res.json({ message: "Left room" });
     });
-  } 
+  }
   // if room id is 0, then the user has left all rooms
   if (roomId !== "0") {
     // add user to joining room
