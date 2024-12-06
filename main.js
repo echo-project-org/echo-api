@@ -3,6 +3,9 @@ const server = express();
 const bodyParser = require('body-parser');
 const cors = require("cors");
 
+const http = require('http');
+const WSWrapper = require("./classes/wswrapper.js");
+
 const cLoader = require("./classes/configLoader");
 const config = new cLoader().getCfg();
 
@@ -64,4 +67,7 @@ server.use("/api/servers", require("./routes/servers"));
 server.use("/api/media", require("./routes/media"));
 server.use("/api/events", require("./routes/events"));
 
-server.listen(config.port, () => console.log("API online and listening on port", config.port));
+const httpServer = http.createServer(server);
+httpServer.listen(config.port, () => console.log("API online and listening on port", config.port));
+
+WSWrapper.init(httpServer);
