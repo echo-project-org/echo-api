@@ -1,8 +1,8 @@
-const WebSocketServer = require('websocket').server;
+const io = require('socket.io');
 
 class WSWrapper {
   constructor() {
-    this.ws = null;
+    this.io = null;
     this.protocol = "echo";
   }
 
@@ -16,26 +16,18 @@ class WSWrapper {
     return true;
   }
 
-  init(sServer) {
+  init(httpServer) {
     // WebSocket server
-    this.ws = new WebSocketServer({
-      httpServer: sServer,
-      autoAcceptConnections: false
+    this.io = io(httpServer);
+
+    this.io.use((socket, next) => {
+      // middleware to do whatever we want
+      // const request = socket.request;
+      next();
     });
 
-    this.registerHandlers();
-
-    sServer.on('upgrade', (request, socket, head) => {
-      console.log("Got upgrade request.");
-
-      socket.on("error", (e) => {
-        console.error("Error in WSWrapper:", e.message);
-      });
-
-      socket.on("close", (e) => {
-        console.log("WSWrapper socket closed.");
-      });
-    });
+    const Rooms = require("./rooms");
+    new Rooms(this.io);
 
     return this;
   }

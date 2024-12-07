@@ -21,12 +21,6 @@ const database = new SQL(config);
 //const CacheHandler = require("./classes/cacheHandler.js");
 //const cache = new CacheHandler(config);
 
-const EventsHandler = require("./classes/eventsHandler.js");
-const eventsHandler = new EventsHandler();
-
-const msHandler = require("./classes/mediasoupHandler.js");
-const ms = new msHandler();
-
 // add body parser middleware for api requests
 server.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 server.use(bodyParser.json({ limit: '5mb' }));
@@ -43,9 +37,7 @@ server.use((req, res, next) => {
     if (!req.utils) req.utils = require("./classes/utils");
     if (!req.database) req.database = database.getConnection();
     //if (!req.cache) req.cache = cache;
-    if (!req.eventsHandler) req.eventsHandler = eventsHandler;
     if (!req.config) req.config = config;
-    if (!req.ms) req.ms = ms;
 
     if (!req.deployMode) req.deployMode = config.env;
 
@@ -64,8 +56,6 @@ server.use("/api/rooms", require("./routes/rooms"));
 server.use("/api/app", require("./routes/app"));
 server.use("/api/auth", require("./routes/auth"));
 server.use("/api/servers", require("./routes/servers"));
-server.use("/api/media", require("./routes/media"));
-server.use("/api/events", require("./routes/events"));
 
 const httpServer = http.createServer(server);
 httpServer.listen(config.port, () => console.log("API online and listening on port", config.port));
