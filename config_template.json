@@ -1,19 +1,10 @@
 {
-    "env": "prod",
+    "env": "dev",
     "log": "verbose",
-    "port": "0000",
-    "tokenExpireInDays": 7,
+    "port": "6980",
+    "tokenExpireInDays": 14,
     "database": {
-        "enableSqliteCaching": true,
-        "sqliteCachingConfig": {
-            "name": "template.db",
-            "location": "data/cache"
-        },
-        "retryInterval": 5,
-        "host": "",
-        "user": "",
-        "password": "",
-        "database": ""
+        "filename": "data/echoDatabase.db"
     },
     "logger": {
         "maxFileSize": 5242880,
