@@ -12,14 +12,8 @@ const config = new cLoader().getCfg();
 const { Logger } = require("./classes/logger.js");
 new Logger(config);
 
-const OAuth = require("./classes/auth");
-const authenticator = new OAuth();
-
-const SQL = require("./classes/mysql");
-const database = new SQL(config);
-
-//const CacheHandler = require("./classes/cacheHandler.js");
-//const cache = new CacheHandler(config);
+const db = require("./classes/echoDatabase");
+const database = new db(config);
 
 // add body parser middleware for api requests
 server.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
@@ -33,7 +27,7 @@ server.use((req, res, next) => {
     res.setHeader("Access-Control-Expose-Headers", "Authorization");
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    if (!req.authenticator) req.authenticator = authenticator;
+
     if (!req.utils) req.utils = require("./classes/utils");
     if (!req.database) req.database = database.getConnection();
     //if (!req.cache) req.cache = cache;
@@ -53,9 +47,6 @@ server.use((req, res, next) => {
 
 server.use("/api/users", require("./routes/users"));
 server.use("/api/rooms", require("./routes/rooms"));
-server.use("/api/app", require("./routes/app"));
-server.use("/api/auth", require("./routes/auth"));
-server.use("/api/servers", require("./routes/servers"));
 
 const httpServer = http.createServer(server);
 httpServer.listen(config.port, () => console.log("API online and listening on port", config.port));
