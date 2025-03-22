@@ -1,8 +1,11 @@
-const io = require('socket.io');
+import MediasoupManager from '../classes/mediasoupManager.js';
+import { Server as io } from 'socket.io';
 
 class WSWrapper {
   constructor() {
     this.io = null;
+    this.authenticator = null;
+    this.config = null;
     this.protocol = "echo";
   }
 
@@ -16,18 +19,40 @@ class WSWrapper {
     return true;
   }
 
-  init(httpServer) {
+  init(httpServer, authenticator, config) {
     // WebSocket server
-    this.io = io(httpServer);
+    this.io = new io(httpServer);
+    this.authenticator = authenticator;
+    this.config = config;
 
     this.io.use((socket, next) => {
-      // middleware to do whatever we want
-      // const request = socket.request;
-      next();
+      //check if there is a valid token
+      const request = socket.request;
+      if (!request.headers.authorization) {
+        if (this.config.env !== "dev") {
+          return next(new Error('No token provided'));
+        } else {
+          //dev mode, allow all connections
+          next();
+        }
+      } else {
+        //remove the Bearer part
+        let token = request.headers.authorization.split(" ")[1];
+        this.authenticator.verifyToken(token).then((tokenBody) => {
+          //add the verified id to the socket
+          socket.verifiedId = verifiedId;
+          next();
+        }).catch((err) => {
+          //if the token is invalid, reject the connection
+          next(new Error('Invalid token'));
+        });
+      }
     });
 
-    const Rooms = require("./rooms");
-    new Rooms(this.io);
+    //const Rooms = require("./rooms");
+    //new Rooms(this.io);
+
+    const msManager = new MediasoupManager();
 
     return this;
   }
@@ -82,4 +107,4 @@ class WSWrapper {
   }
 }
 
-module.exports = new WSWrapper();
+export default WSWrapper;

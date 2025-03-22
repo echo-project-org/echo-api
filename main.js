@@ -1,22 +1,20 @@
-const express = require('express');
+import WSWrapper from './ws/wswrapper.js';
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import http from 'http';
+import cLoader from './classes/configLoader.js';
+import Logger from './classes/logger.js';
+import EchoDatabase from './classes/echoDatabase.js';
+import { Auth } from './classes/auth.js';
+import rooms from './routes/rooms.js';
+import users from './routes/users.js';
+
 const server = express();
-const bodyParser = require('body-parser');
-const cors = require("cors");
-
-const http = require('http');
-const WSWrapper = require("./classes/wswrapper.js");
-
-const cLoader = require("./classes/configLoader");
 const config = new cLoader().getCfg();
+const logger = new Logger(config);
 
-const { Logger } = require("./classes/logger.js");
-new Logger(config);
-
-const db = require("./classes/echoDatabase");
-const database = new db(config);
-
-const { Auth } = require("./classes/auth");;
-const authenticator = new Auth(config);
+const database = new EchoDatabase(config);const authenticator = new Auth(config);
 
 // add body parser middleware for api requests
 server.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
@@ -50,10 +48,11 @@ server.use((req, res, next) => {
     next();
 });
 
-server.use("/api/users", require("./routes/users"));
-server.use("/api/rooms", require("./routes/rooms"));
+server.use("/api/users", users);
+server.use("/api/rooms", rooms);
 
 const httpServer = http.createServer(server);
 httpServer.listen(config.port, () => console.log("API online and listening on port", config.port));
 
-WSWrapper.init(httpServer);
+const wsWrapper = new WSWrapper();
+wsWrapper.init(httpServer, authenticator, config);

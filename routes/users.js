@@ -1,11 +1,9 @@
-const express = require("express");
-const router = express.Router();
-const fs = require("fs");
-const path = require("path");
+import express from "express";
+import fs from "fs";
+import path from "path";
+import { authMiddleware } from "../classes/utils.js";
 
-const {
-    authMiddleware,
-} = require("../classes/utils");
+const router = express.Router();
 
 router.post("/auth", (req, res) => {
     const { hashedIdentity } = req.body;
@@ -185,4 +183,4 @@ router.post("/customStatus", (req, res) => {
     });
 });
 
-module.exports = router;
+export default router;

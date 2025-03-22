@@ -102,4 +102,4 @@ class EventsHandler {
   }
 }
 
-module.exports = EventsHandler;
+export default EventsHandler;

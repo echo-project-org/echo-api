@@ -1,4 +1,4 @@
-const sqlite3 = require('sqlite3').verbose();
+import sqlite3 from 'sqlite3';
 
 class EchoDatabase {
     constructor(config) {
@@ -86,4 +86,4 @@ class EchoDatabase {
     }
 }
 
-module.exports = EchoDatabase;
+export default EchoDatabase;

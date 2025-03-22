@@ -1,9 +1,9 @@
 const User = require("./users");
 const mediasoup = require("mediasoup");
-const Colors = require("./colors");
+const Colors = require("../classes/colors");
 const colors = new Colors();
 const os = require("os");
-const EchoApi = require("./EchoApi");
+const EchoApi = require("../classes/EchoApi");
 
 const codecs = [{
     kind: "audio",

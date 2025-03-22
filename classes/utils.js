@@ -8,10 +8,10 @@ function getRoomIdFromUserId(db, userId) {
     let roomId, serverId;
     db.query("SELECT roomId, serverId FROM room_users WHERE userId = ?", [userId], (err, result, fields) => {
       if (err) {
-        console.error(err); 
+        console.error(err);
         reject(err);
       }
-      
+
       if (result.length > 0) {
         const plate = result[0];
         roomId = plate.roomId;
@@ -24,14 +24,19 @@ function getRoomIdFromUserId(db, userId) {
   });
 }
 
-function authMiddleware(req, res, next){
+function authMiddleware(req, res, next) {
+  if (req.config.env == "dev") {
+    next();
+    return;
+  }
+
   let token = req.headers.authorization;
 
   if (!token) {
     res.status(401).send({ message: "You are not authorized to do this." });
     return;
   }
-  
+
   //remove the Bearer part
   token = token.split(" ")[1];
   req.authenticator.verifyToken(token).then((tokenBody) => {
@@ -42,7 +47,7 @@ function authMiddleware(req, res, next){
   });
 }
 
-module.exports = {
+export {
   checkEmail,
   authMiddleware,
   getRoomIdFromUserId

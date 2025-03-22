@@ -1,5 +1,5 @@
-const path = require("path");
-const fs = require("fs");
+import path from "path";
+import fs from "fs";
 
 class Logger {
     constructor(config) {
@@ -217,4 +217,4 @@ class Logger {
     }
 }
 
-module.exports = { Logger };
+export default Logger;
