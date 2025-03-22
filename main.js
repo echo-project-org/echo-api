@@ -15,6 +15,9 @@ new Logger(config);
 const db = require("./classes/echoDatabase");
 const database = new db(config);
 
+const { Auth } = require("./classes/auth");;
+const authenticator = new Auth(config);
+
 // add body parser middleware for api requests
 server.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 server.use(bodyParser.json({ limit: '5mb' }));
@@ -35,13 +38,15 @@ server.use((req, res, next) => {
 
     if (!req.deployMode) req.deployMode = config.env;
 
+    if (!req.authenticator) req.authenticator = authenticator;
+
     // check if database is connected
     if (!req.database) {
         console.error("Database not connected. Exiting...");
         res.status(500).send({ message: "Database not connected. Exiting..." });
         return;
     }
-    
+
     next();
 });
 
