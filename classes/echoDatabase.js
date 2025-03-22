@@ -24,13 +24,16 @@ class EchoDatabase {
     createTables() {
         try {
             this.db.run(`CREATE TABLE IF NOT EXISTS users (
-                hashedIdentity TEXT PRIMARY KEY AUTOINCREMENT,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                hashedIdentity TEXT NOT NULL UNIQUE,
                 username TEXT NOT NULL DEFAULT 'Anonymous',
                 lastIP TEXT NOT NULL DEFAULT '0.0.0.0',
                 lastLogin INTEGER NOT NULL DEFAULT current_timestamp,
                 firstLogin INTEGER NOT NULL DEFAULT current_timestamp,
                 img TEXT,
-                online INTEGER NOT NULL DEFAULT 0
+                online INTEGER NOT NULL DEFAULT 0,
+                muted INTEGER NOT NULL DEFAULT 0,
+                deaf INTEGER NOT NULL DEFAULT 0
             )`);
 
             this.db.run(`CREATE TABLE IF NOT EXISTS rooms (
