@@ -1,7 +1,6 @@
 class User {
-    constructor(socket, id, token) {
+    constructor(socket, id) {
         this.id = id;
-        this.token = token;
         this.socket = socket;
         this.socketId = socket.id;
         this.serverId = null;
@@ -51,7 +50,6 @@ class User {
         });
         this.socket.on("client.join", (data) => {
             data.id = this.id;
-            data.token = this.token;
             this.serverId = data.serverId;
             this.triggerEvent("join", data);
         });
@@ -892,4 +890,4 @@ class User {
     }
 }
 
-module.exports = User;
+export default User;
