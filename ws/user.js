@@ -1,16 +1,15 @@
 class User {
-    constructor(socket, id) {
+    constructor(socket, id, msManager) {
         this.id = id;
         this.socket = socket;
+        this.msManager = msManager;
         this.socketId = socket.id;
-        this.serverId = null;
-        this.currentRoom = 0;
+
         this.isDeaf = false;
         this.isMuted = false;
         this.isBroadcastingVideo = false;
         this.broadcastWithAudio = false;
         this.isPrivateCalling = false;
-        this.events = {};
 
         this.receiveTransport = null;
         this.sendTransport = null;
@@ -48,12 +47,10 @@ class User {
             data.id = this.id;
             this.triggerEvent("audioState", data)
         });
-        this.socket.on("client.join", (data) => {
-            data.id = this.id;
-            this.serverId = data.serverId;
-            this.triggerEvent("join", data);
+        this.socket.on("client.joinRoom", (data) => {
+            this.msManager.addUserToRoom(data, this);
         });
-        this.socket.on("client.end", (data) => {
+        this.socket.on("client.exitRoom", (data) => {
             data.id = this.id;
             this.clientDisconnected(data)
         });
@@ -196,30 +193,6 @@ class User {
         }
         console.log("sending friendAction", data, "user class:", this.id, "==", typeof this.id)
         this.socket.emit("server.friendAction", data);
-    }
-
-    setIsPrivateCalling(value) {
-        this.isPrivateCalling = value;
-    }
-
-    privateCallRinging(data) {
-        this.socket.emit("server.privateCallRinging", data);
-    }
-
-    someoneCallingMe(data) {
-        this.triggerEvent("server.someoneCallingMe", data);
-    }
-
-    privateCallAccepted(data) {
-        this.triggerEvent("server.privateCallAccepted", data);
-    }
-
-    privateCallRejected(data) {
-        this.triggerEvent("server.privateCallRejected", data);
-    }
-
-    privateCallHangup(data) {
-        this.triggerEvent("server.privateCallHangup", data);
     }
 
     getIsBroadcastingVideo() {

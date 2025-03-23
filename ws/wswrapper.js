@@ -53,15 +53,12 @@ class WSWrapper {
       }
     });
 
-    //const Rooms = require("./rooms");
-    //new Rooms(this.io);
-
     this.io.on('connection', async (socket) => {
       const req = socket.request;
       const userId = socket.verifiedId;
 
       //create a new user
-      const user = new Users(userId, socket);
+      const user = new Users(userId, socket, this.msManager);
       console.log("User connected: " + userId);
 
       //add the user to the connected clients
